@@ -1,0 +1,20 @@
+Django==4.2.9
+djangorestframework==3.14.0
+PyJWT==2.8.0
+psycopg2-binary==2.9.9
+redis==5.0.1
+django-redis==5.4.0
+python-decouple==3.8
+celery==5.3.6
+drf-spectacular==0.27.1
+django-cors-headers==4.3.1
+gunicorn==21.2.0
+
+# FastAPI telemetry sidecar
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+sqlalchemy==2.0.25
+asyncpg==0.29.0
+pydantic==2.6.1
+pydantic-settings==2.1.0
+httpx==0.26.0

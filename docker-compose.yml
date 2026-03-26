@@ -109,6 +109,63 @@ services:
       - ./services/rider-service:/app
     command: celery -A rider_service.celery worker --loglevel=info --concurrency=4
 
+  fleet-service:
+    build:
+      context: ./services/fleet-service
+      dockerfile: Dockerfile
+    container_name: yana_fleet
+    env_file:
+      - ./services/fleet-service/.env
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/fleet-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8003"
+
+  fleet-celery:
+    build:
+      context: ./services/fleet-service
+      dockerfile: Dockerfile
+    container_name: yana_fleet_celery
+    env_file:
+      - ./services/fleet-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/fleet-service:/app
+    command: celery -A fleet_service.celery worker --loglevel=info --concurrency=4 -B
+
+  fleet-telemetry:
+    build:
+      context: ./services/fleet-service
+      dockerfile: Dockerfile
+    container_name: yana_fleet_telemetry
+    env_file:
+      - ./services/fleet-service/.env
+    ports:
+      - "8013:8013"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/fleet-service:/app
+    command: >
+      uvicorn fleet_service.telemetry.main:app
+      --host 0.0.0.0 --port 8013
+      --workers 2 --loop uvloop
+
   # ─── API Gateway (Nginx) ──────────────────────────────────────
   nginx:
     image: nginx:alpine
@@ -121,6 +178,8 @@ services:
     depends_on:
       - auth-service
       - rider-service
+      - fleet-service
+      - fleet-telemetry
 
 volumes:
   postgres_data:

@@ -1,4 +1,5 @@
 .docker-tmp/
+.zip-import/
 __pycache__/
 *.pyc
 *.pyo

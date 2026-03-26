@@ -22,6 +22,8 @@ yana-os/
 |---------------|------|--------|-------------------------------------------|
 | auth-service  | 8001 | Django | Admin JWT login, Rider OTP auth           |
 | rider-service | 8002 | Django | Rider onboarding, KYC, document uploads   |
+| fleet-service | 8003 | Django | Fleet hubs, vehicles, allotments, alerts  |
+| fleet-telemetry | 8013 | FastAPI | GPS telemetry ingestion and live feed   |
 | nginx         | 8081 | Nginx  | API gateway, rate limiting, routing       |
 | postgres      | 5432 | PG 15  | Primary relational DB                     |
 | redis         | 6379 | Redis  | OTP storage, Celery broker, cache         |
@@ -56,6 +58,7 @@ Note:
 ```bash
 curl http://localhost:8001/health/   # auth service
 curl http://localhost:8002/health/   # rider service
+curl http://localhost:8003/health/   # fleet service
 curl http://localhost:8081/health/   # nginx gateway
 ```
 
@@ -69,6 +72,7 @@ curl http://localhost:8081/health/   # nginx gateway
 ### 5. API Documentation
 - Auth Service:  http://localhost:8001/api/docs/
 - Rider Service: http://localhost:8002/api/docs/
+- Fleet Service: http://localhost:8003/api/docs/
 - Gateway Health: http://localhost:8081/health/
 - Demo UI: http://localhost:8081/demo/index.html
 
@@ -109,6 +113,31 @@ GET    /api/v1/riders/{id}/nominees/             List nominees
 GET    /api/v1/riders/{id}/kyc/logs/             KYC audit trail
 ```
 
+### Fleet Service (via gateway: localhost:8081)
+
+```
+GET    /api/v1/fleet/cities/                              List cities
+GET    /api/v1/fleet/hubs/                                List hubs
+POST   /api/v1/fleet/hubs/                                Create hub
+GET    /api/v1/fleet/hubs/{id}/                           Get hub detail
+GET    /api/v1/fleet/hubs/{id}/utilization/               Hub utilization
+GET    /api/v1/fleet/vehicles/                            List vehicles
+POST   /api/v1/fleet/vehicles/                            Create vehicle
+GET    /api/v1/fleet/vehicles/{id}/                       Get vehicle detail
+POST   /api/v1/fleet/vehicles/{id}/status/                Update vehicle status
+GET    /api/v1/fleet/vehicles/{id}/gps-history/           Vehicle GPS history
+GET    /api/v1/fleet/allotments/                          List allotments
+POST   /api/v1/fleet/allotments/                          Create allotment
+POST   /api/v1/fleet/allotments/{id}/return/              Return vehicle
+GET    /api/v1/fleet/alerts/                              List maintenance alerts
+POST   /api/v1/fleet/alerts/{id}/acknowledge/             Acknowledge alert
+GET    /api/v1/fleet/dashboard/utilization/               Fleet dashboard
+POST   /telemetry/ping                                    Single GPS ping
+POST   /telemetry/ping/bulk                               Bulk GPS ping
+GET    /telemetry/live/{vehicle_id}                       Live vehicle telemetry
+GET    /telemetry/fleet/live                              Fleet live positions
+```
+
 ---
 
 ## Rider Onboarding State Machine
@@ -136,6 +165,9 @@ docker exec yana_auth python manage.py test tests --verbosity=2
 
 # Rider service
 docker exec yana_rider python manage.py test tests --verbosity=2
+
+# Fleet service
+docker exec yana_fleet python manage.py test tests --verbosity=2
 ```
 
 ---
