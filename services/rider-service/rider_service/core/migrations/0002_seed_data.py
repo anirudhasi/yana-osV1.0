@@ -13,6 +13,15 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunSQL(
             sql="""
+            CREATE TABLE IF NOT EXISTS cities (
+                id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name       VARCHAR(100) NOT NULL,
+                state      VARCHAR(100) NOT NULL,
+                is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
             -- Cities
             INSERT INTO cities (id, name, state, is_active)
             VALUES
@@ -70,6 +79,8 @@ class Migration(migrations.Migration):
             DELETE FROM riders WHERE phone LIKE '98765000%';
             DELETE FROM fleet_hubs WHERE id LIKE '22222222%';
             DELETE FROM cities WHERE id LIKE '11111111%';
+            DROP TABLE IF EXISTS fleet_hubs;
+            DROP TABLE IF EXISTS cities;
             """
         ),
     ]

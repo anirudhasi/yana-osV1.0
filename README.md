@@ -22,7 +22,7 @@ yana-os/
 |---------------|------|--------|-------------------------------------------|
 | auth-service  | 8001 | Django | Admin JWT login, Rider OTP auth           |
 | rider-service | 8002 | Django | Rider onboarding, KYC, document uploads   |
-| nginx         | 8000 | Nginx  | API gateway, rate limiting, routing       |
+| nginx         | 8081 | Nginx  | API gateway, rate limiting, routing       |
 | postgres      | 5432 | PG 15  | Primary relational DB                     |
 | redis         | 6379 | Redis  | OTP storage, Celery broker, cache         |
 | minio         | 9000 | MinIO  | S3-compatible document storage            |
@@ -49,11 +49,14 @@ docker compose up --build
 
 Wait for all services to be healthy (~60 seconds on first run).
 
+Note:
+- This repo uses gateway port `8081` locally because `8000` was already occupied on this machine by another project.
+
 ### 3. Verify services
 ```bash
 curl http://localhost:8001/health/   # auth service
 curl http://localhost:8002/health/   # rider service
-curl http://localhost:8000/health/   # nginx gateway
+curl http://localhost:8081/health/   # nginx gateway
 ```
 
 ### 4. Seeded admin users
@@ -66,6 +69,8 @@ curl http://localhost:8000/health/   # nginx gateway
 ### 5. API Documentation
 - Auth Service:  http://localhost:8001/api/docs/
 - Rider Service: http://localhost:8002/api/docs/
+- Gateway Health: http://localhost:8081/health/
+- Demo UI: http://localhost:8081/demo/index.html
 
 ### 6. MinIO Console
 http://localhost:9001 (user: yana_minio / pass: yana_minio_secret)
@@ -74,7 +79,7 @@ http://localhost:9001 (user: yana_minio / pass: yana_minio_secret)
 
 ## API Overview
 
-### Auth Service (via gateway: localhost:8000)
+### Auth Service (via gateway: localhost:8081)
 
 ```
 POST /api/v1/auth/admin/login         Admin email+password login
@@ -85,7 +90,7 @@ POST /api/v1/auth/refresh             Refresh JWT token
 POST /api/v1/auth/logout              Invalidate token
 ```
 
-### Rider Service (via gateway: localhost:8000)
+### Rider Service (via gateway: localhost:8081)
 
 ```
 POST   /api/v1/riders/                           Create rider
@@ -132,6 +137,69 @@ docker exec yana_auth python manage.py test tests --verbosity=2
 # Rider service
 docker exec yana_rider python manage.py test tests --verbosity=2
 ```
+
+---
+
+## Local Validation
+
+Validated locally through the gateway:
+- `GET http://localhost:8081/health/` returns `200`
+- `GET http://localhost:8081/demo/index.html` serves the local browser demo UI
+- `POST /api/v1/auth/admin/login` works with `admin@yana.in / Admin@123`
+- `POST /api/v1/auth/rider/send-otp` returns a simulated OTP
+- `POST /api/v1/auth/rider/verify-otp` returns rider JWT tokens
+- Rider-authenticated `GET /api/v1/riders/{id}/onboarding-status/` returns `200`
+- Rider access to another rider's onboarding status returns `403`
+- Rider access to admin-only `GET /api/v1/riders/` returns `403`
+
+Quick local test flow:
+```bash
+# 1. Health
+curl http://localhost:8081/health/
+
+# 1b. Open the local demo UI in a browser
+# http://localhost:8081/demo/index.html
+
+# 2. Admin login
+curl -X POST http://localhost:8081/api/v1/auth/admin/login \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"admin@yana.in\",\"password\":\"Admin@123\"}"
+
+# 3. Rider OTP
+curl -X POST http://localhost:8081/api/v1/auth/rider/send-otp \
+  -H "Content-Type: application/json" \
+  -d "{\"phone\":\"9876500001\"}"
+
+# 4. Verify OTP with the 6-digit code from step 3
+curl -X POST http://localhost:8081/api/v1/auth/rider/verify-otp \
+  -H "Content-Type: application/json" \
+  -d "{\"phone\":\"9876500001\",\"otp\":\"123456\"}"
+```
+
+---
+
+## Demo Deployment
+
+This repo now includes a Render Blueprint:
+- [render.yaml](C:\Users\sangi\OneDrive\Documents\Anirudh\Yana\yana-osV1.0\render.yaml)
+
+It provisions:
+- public gateway with demo UI
+- private `auth-service`
+- private `rider-service`
+- private MinIO
+- Render Postgres
+- Render Key Value
+
+After you push to GitHub:
+1. Open Render
+2. Create a new Blueprint from this repo
+3. Select `render.yaml`
+4. Apply the Blueprint
+5. Once the gateway deploy is live, share that public gateway URL with the client
+
+Client demo URL pattern:
+- `https://<render-gateway-url>/demo/index.html`
 
 ---
 

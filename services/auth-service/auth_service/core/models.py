@@ -84,7 +84,6 @@ class Rider(models.Model):
     phone  = models.CharField(max_length=15, unique=True)
     full_name = models.CharField(max_length=200)
     status = models.CharField(max_length=30, choices=RIDER_STATUS_CHOICES, default="APPLIED")
-    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -97,3 +96,15 @@ class Rider(models.Model):
 
     def __str__(self):
         return f"Rider {self.phone}"
+
+    @property
+    def is_active(self):
+        return self.deleted_at is None and self.status != "OFFBOARDED"
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
