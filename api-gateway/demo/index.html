@@ -280,11 +280,12 @@
   <div class="wrap">
     <section class="hero">
       <h1>Yana OS Local Demo</h1>
-      <p>Browser-based test harness for admin login, rider OTP login, rider list, and onboarding status.</p>
+      <p>Browser-based test harness for admin login, rider OTP login, rider onboarding, and fleet operations.</p>
       <div class="linkbar">
         <a href="/health/">Gateway Health</a>
         <a href="http://localhost:8001/api/docs/" target="_blank" rel="noreferrer">Auth Docs</a>
         <a href="http://localhost:8002/api/docs/" target="_blank" rel="noreferrer">Rider Docs</a>
+        <a href="http://localhost:8003/api/docs/" target="_blank" rel="noreferrer">Fleet Docs</a>
       </div>
     </section>
 
@@ -349,6 +350,7 @@
       </section>
       </div>
 
+      <div class="stack">
       <section class="panel">
         <h2>Rider Flow</h2>
         <p class="subtle">Send OTP, verify it, then fetch the rider's onboarding status.</p>
@@ -381,6 +383,58 @@
         <div id="rider-status" class="status info">Rider session not started yet.</div>
         <div id="onboarding-card" class="cards"></div>
       </section>
+
+      <section class="panel">
+        <h2>Fleet Ops</h2>
+        <p class="subtle">Use the admin token to inspect cities, hubs, vehicles, alerts, and dashboard metrics from the fleet module.</p>
+
+        <div class="controls">
+          <div class="row">
+            <label>
+              Vehicle Status Filter
+              <select id="fleet-status-filter">
+                <option value="">All statuses</option>
+                <option value="AVAILABLE">AVAILABLE</option>
+                <option value="ALLOCATED">ALLOCATED</option>
+                <option value="MAINTENANCE">MAINTENANCE</option>
+                <option value="RETIRED">RETIRED</option>
+              </select>
+            </label>
+            <label>
+              Selected Vehicle ID
+              <input id="fleet-vehicle-id" placeholder="Pick from vehicle list">
+            </label>
+          </div>
+
+          <div class="row">
+            <label>
+              Selected Alert ID
+              <input id="fleet-alert-id" placeholder="Pick from alert list">
+            </label>
+            <label>
+              Status Change Reason
+              <input id="fleet-status-reason" value="Changed from demo UI">
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="fleet-dashboard-btn" class="mini">Load Dashboard</button>
+            <button id="fleet-cities-btn" class="mini alt">Load Cities</button>
+            <button id="fleet-hubs-btn" class="mini">Load Hubs</button>
+            <button id="fleet-vehicles-btn" class="mini alt">Load Vehicles</button>
+            <button id="fleet-detail-btn" class="mini">Vehicle Detail</button>
+            <button id="fleet-maintenance-btn" class="mini alt">Mark Maintenance</button>
+            <button id="fleet-alerts-btn" class="mini">Load Alerts</button>
+            <button id="fleet-ack-alert-btn" class="mini alt">Acknowledge Alert</button>
+          </div>
+        </div>
+
+        <div id="fleet-status" class="status info">Log in as admin first, then use the fleet buttons to inspect the new delivery module.</div>
+        <div id="fleet-dashboard-card" class="cards"></div>
+        <div id="fleet-list-card" class="cards"></div>
+        <div id="fleet-detail-card" class="cards"></div>
+      </section>
+      </div>
     </div>
 
     <section class="panel" style="margin-top:20px;">
@@ -395,6 +449,8 @@
       adminToken: "",
       riderToken: "",
       riderId: "",
+      fleetVehicleId: "",
+      fleetAlertId: "",
     };
 
     const el = (id) => document.getElementById(id);
@@ -578,8 +634,87 @@
       `).join("");
     }
 
+    function renderFleetDashboard(data) {
+      el("fleet-dashboard-card").innerHTML = `
+        <div class="card">
+          <strong>Fleet Summary</strong>
+          <div class="meta">
+            <span class="pill">Hubs: ${data.summary.total_hubs}</span>
+            <span class="pill">Vehicles: ${data.summary.total_vehicles}</span>
+            <span class="pill">Available: ${data.summary.total_available}</span>
+            <span class="pill">Allocated: ${data.summary.total_allocated}</span>
+            <span class="pill">Utilization: ${data.summary.avg_utilization}%</span>
+          </div>
+        </div>
+      ` + (data.hubs || []).map((hub) => `
+        <div class="card">
+          <strong>${hub.hub_name}</strong>
+          <div class="meta">
+            <span class="pill">${hub.city_name}</span>
+            <span class="pill">Capacity ${hub.capacity}</span>
+            <span class="pill">Vehicles ${hub.total_vehicles}</span>
+            <span class="pill">Utilization ${hub.utilization_pct}%</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderFleetList(title, items, mapper) {
+      const root = el("fleet-list-card");
+      if (!items.length) {
+        root.innerHTML = `<div class="card"><strong>${title}</strong><div>No records found.</div></div>`;
+        return;
+      }
+      root.innerHTML = items.map(mapper).join("");
+      root.querySelectorAll(".pick-vehicle-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.fleetVehicleId = button.dataset.vehicleId;
+          el("fleet-vehicle-id").value = state.fleetVehicleId;
+          setStatus("fleet-status", "ok", "Selected vehicle " + button.dataset.vehicleLabel);
+        });
+      });
+      root.querySelectorAll(".pick-alert-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.fleetAlertId = button.dataset.alertId;
+          el("fleet-alert-id").value = state.fleetAlertId;
+          setStatus("fleet-status", "ok", "Selected alert " + button.dataset.alertLabel);
+        });
+      });
+    }
+
+    function renderFleetDetail(data) {
+      el("fleet-detail-card").innerHTML = `
+        <div class="card">
+          <strong>${data.registration_number}</strong>
+          <div class="meta">
+            <span class="pill">${data.status}</span>
+            <span>${data.make} ${data.model}</span>
+            <span>${data.hub_name || "No hub"}</span>
+          </div>
+          <div class="meta">
+            <span>Battery ${data.battery_level_pct || 0}%</span>
+            <span>Health ${data.battery_health_pct || 0}%</span>
+            <span>Odometer ${data.current_odometer_km || 0} km</span>
+          </div>
+          <div class="meta">
+            <span>Needs service: ${data.needs_service ? "yes" : "no"}</span>
+            <span>Next service: ${data.next_service_date || "not set"}</span>
+            <span>Insurance: ${data.insurance_expiry || "not set"}</span>
+          </div>
+        </div>
+      `;
+    }
+
     function getSelectedRiderId() {
       return el("selected-rider-id").value.trim();
+    }
+
+    function getFleetVehicleId() {
+      return el("fleet-vehicle-id").value.trim() || state.fleetVehicleId;
+    }
+
+    function getFleetAlertId() {
+      return el("fleet-alert-id").value.trim() || state.fleetAlertId;
     }
 
     function requireAdminAndRider() {
@@ -593,6 +728,14 @@
         return false;
       }
 
+      return true;
+    }
+
+    function requireAdminForFleet() {
+      if (!state.adminToken) {
+        setStatus("fleet-status", "error", "Log in as admin first.");
+        return false;
+      }
       return true;
     }
 
@@ -828,6 +971,199 @@
         setStatus("rider-status", "error", error.message);
       } finally {
         setLoading("load-onboarding-btn", false);
+      }
+    });
+
+    el("fleet-dashboard-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      setLoading("fleet-dashboard-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/dashboard/utilization/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderFleetDashboard(body.data);
+        setStatus("fleet-status", "ok", "Fleet dashboard loaded successfully.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-dashboard-btn", false);
+      }
+    });
+
+    el("fleet-cities-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      setLoading("fleet-cities-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/cities/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderFleetList("Cities", body.data || [], (city) => `
+          <div class="card">
+            <strong>${city.name}</strong>
+            <div class="meta">
+              <span class="pill">${city.state}</span>
+              <span>${city.id}</span>
+            </div>
+          </div>
+        `);
+        setStatus("fleet-status", "ok", "Cities loaded successfully.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-cities-btn", false);
+      }
+    });
+
+    el("fleet-hubs-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      setLoading("fleet-hubs-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/hubs/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderFleetList("Hubs", body.data.results || [], (hub) => `
+          <div class="card">
+            <strong>${hub.name}</strong>
+            <div class="meta">
+              <span class="pill">${hub.city_name}</span>
+              <span>Capacity ${hub.capacity}</span>
+              <span>${hub.address || ""}</span>
+            </div>
+          </div>
+        `);
+        setStatus("fleet-status", "ok", "Hubs loaded successfully.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-hubs-btn", false);
+      }
+    });
+
+    el("fleet-vehicles-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      setLoading("fleet-vehicles-btn", true);
+      try {
+        const statusValue = el("fleet-status-filter").value;
+        const query = statusValue ? "?status=" + encodeURIComponent(statusValue) : "";
+        const body = await api("/api/v1/fleet/vehicles/" + query, {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderFleetList("Vehicles", body.data.results || [], (vehicle) => `
+          <div class="card">
+            <strong>${vehicle.registration_number}</strong>
+            <div class="meta">
+              <span class="pill">${vehicle.status}</span>
+              <span>${vehicle.make} ${vehicle.model}</span>
+              <span>${vehicle.hub_name || ""}</span>
+            </div>
+            <div class="actions">
+              <button class="mini pick-vehicle-btn" data-vehicle-id="${vehicle.id}" data-vehicle-label="${vehicle.registration_number}">Select Vehicle</button>
+            </div>
+          </div>
+        `);
+        setStatus("fleet-status", "ok", "Vehicles loaded successfully.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-vehicles-btn", false);
+      }
+    });
+
+    el("fleet-detail-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      const vehicleId = getFleetVehicleId();
+      if (!vehicleId) {
+        setStatus("fleet-status", "error", "Select a vehicle first.");
+        return;
+      }
+      setLoading("fleet-detail-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/vehicles/" + vehicleId + "/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderFleetDetail(body.data);
+        setStatus("fleet-status", "ok", "Vehicle detail loaded successfully.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-detail-btn", false);
+      }
+    });
+
+    el("fleet-maintenance-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      const vehicleId = getFleetVehicleId();
+      if (!vehicleId) {
+        setStatus("fleet-status", "error", "Select a vehicle first.");
+        return;
+      }
+      setLoading("fleet-maintenance-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/vehicles/" + vehicleId + "/status/", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + state.adminToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            status: "MAINTENANCE",
+            reason: el("fleet-status-reason").value.trim() || "Changed from demo UI",
+          }),
+        });
+        setStatus("fleet-status", "ok", body.data.message || "Vehicle moved to maintenance.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-maintenance-btn", false);
+      }
+    });
+
+    el("fleet-alerts-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      setLoading("fleet-alerts-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/alerts/?unresolved=true", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderFleetList("Alerts", body.data.results || [], (alert) => `
+          <div class="card">
+            <strong>${alert.alert_type}</strong>
+            <div class="meta">
+              <span class="pill">${alert.severity}</span>
+              <span>${alert.message}</span>
+              <span>${alert.vehicle_registration_number || alert.vehicle_id || ""}</span>
+            </div>
+            <div class="actions">
+              <button class="mini pick-alert-btn" data-alert-id="${alert.id}" data-alert-label="${alert.alert_type}">Select Alert</button>
+            </div>
+          </div>
+        `);
+        setStatus("fleet-status", "ok", "Alerts loaded successfully.");
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-alerts-btn", false);
+      }
+    });
+
+    el("fleet-ack-alert-btn").addEventListener("click", async () => {
+      if (!requireAdminForFleet()) return;
+      const alertId = getFleetAlertId();
+      if (!alertId) {
+        setStatus("fleet-status", "error", "Select an alert first.");
+        return;
+      }
+      setLoading("fleet-ack-alert-btn", true);
+      try {
+        const body = await api("/api/v1/fleet/alerts/" + alertId + "/acknowledge/", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        setStatus("fleet-status", "ok", "Alert acknowledged for vehicle " + (body.data.vehicle_registration_number || body.data.vehicle_id || ""));
+      } catch (error) {
+        setStatus("fleet-status", "error", error.message);
+      } finally {
+        setLoading("fleet-ack-alert-btn", false);
       }
     });
   </script>
