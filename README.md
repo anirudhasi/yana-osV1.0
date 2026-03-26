@@ -1,0 +1,198 @@
+# Yana OS — Backend Foundation
+
+Production-grade monorepo backend for the Yana OS Rider + Fleet + Demand platform.
+
+## Architecture
+
+```
+yana-os/
+├── api-gateway/           # Nginx reverse proxy config
+├── docker/                # DB init scripts
+├── docker-compose.yml     # Full local stack
+├── services/
+│   ├── auth-service/      # Django — Admin JWT + Rider OTP auth
+│   └── rider-service/     # Django — Full rider onboarding + KYC
+└── shared/
+    └── constants/         # Shared enums and constants
+```
+
+## Services
+
+| Service       | Port | Tech   | Responsibility                            |
+|---------------|------|--------|-------------------------------------------|
+| auth-service  | 8001 | Django | Admin JWT login, Rider OTP auth           |
+| rider-service | 8002 | Django | Rider onboarding, KYC, document uploads   |
+| nginx         | 8000 | Nginx  | API gateway, rate limiting, routing       |
+| postgres      | 5432 | PG 15  | Primary relational DB                     |
+| redis         | 6379 | Redis  | OTP storage, Celery broker, cache         |
+| minio         | 9000 | MinIO  | S3-compatible document storage            |
+
+## Quick Start
+
+### Prerequisites
+- Docker Desktop (or Docker + Docker Compose)
+- 4GB RAM minimum
+
+### 1. Clone and configure
+```bash
+git clone <repo>
+cd yana-os
+
+# The .env files are pre-configured for local dev.
+# In production, change all secrets!
+```
+
+### 2. Start the stack
+```bash
+docker compose up --build
+```
+
+Wait for all services to be healthy (~60 seconds on first run).
+
+### 3. Verify services
+```bash
+curl http://localhost:8001/health/   # auth service
+curl http://localhost:8002/health/   # rider service
+curl http://localhost:8000/health/   # nginx gateway
+```
+
+### 4. Seeded admin users
+| Email            | Password   | Role        |
+|------------------|------------|-------------|
+| admin@yana.in    | Admin@123  | SUPER_ADMIN |
+| ops@yana.in      | Ops@123    | HUB_OPS     |
+| sales@yana.in    | Sales@123  | SALES       |
+
+### 5. API Documentation
+- Auth Service:  http://localhost:8001/api/docs/
+- Rider Service: http://localhost:8002/api/docs/
+
+### 6. MinIO Console
+http://localhost:9001 (user: yana_minio / pass: yana_minio_secret)
+
+---
+
+## API Overview
+
+### Auth Service (via gateway: localhost:8000)
+
+```
+POST /api/v1/auth/admin/login         Admin email+password login
+POST /api/v1/auth/rider/send-otp      Send OTP to rider phone
+POST /api/v1/auth/rider/verify-otp    Verify OTP, get JWT
+GET  /api/v1/auth/me                  Get current user profile
+POST /api/v1/auth/refresh             Refresh JWT token
+POST /api/v1/auth/logout              Invalidate token
+```
+
+### Rider Service (via gateway: localhost:8000)
+
+```
+POST   /api/v1/riders/                           Create rider
+GET    /api/v1/riders/                           List riders (admin)
+GET    /api/v1/riders/{id}/                      Get rider detail
+PATCH  /api/v1/riders/{id}/profile/              Update profile
+POST   /api/v1/riders/{id}/kyc/details/          Submit KYC PII (encrypted)
+POST   /api/v1/riders/{id}/kyc/documents/        Upload document file
+GET    /api/v1/riders/{id}/kyc/documents/        List documents
+POST   /api/v1/riders/{id}/kyc/decide/           Admin: approve/reject KYC
+POST   /api/v1/riders/{id}/documents/{d}/decide/ Admin: per-doc decision
+GET    /api/v1/riders/{id}/onboarding-status/    Get onboarding progress
+POST   /api/v1/riders/{id}/activate/             Admin: activate rider
+POST   /api/v1/riders/{id}/nominees/             Add nominee
+GET    /api/v1/riders/{id}/nominees/             List nominees
+GET    /api/v1/riders/{id}/kyc/logs/             KYC audit trail
+```
+
+---
+
+## Rider Onboarding State Machine
+
+```
+APPLIED → DOCS_SUBMITTED → KYC_PENDING → VERIFIED → TRAINING → ACTIVE
+              ↑                 ↓
+              └── KYC_FAILED ←─┘
+```
+
+KYC Status:
+```
+PENDING → SUBMITTED → UNDER_REVIEW → VERIFIED
+              ↑              ↓
+              └── REJECTED ←─┘
+```
+
+---
+
+## Running Tests
+
+```bash
+# Auth service
+docker exec yana_auth python manage.py test tests --verbosity=2
+
+# Rider service
+docker exec yana_rider python manage.py test tests --verbosity=2
+```
+
+---
+
+## Celery Worker
+
+The Celery worker (yana_rider_celery) runs automatically with docker compose.
+
+Background tasks:
+- `run_kyc_verification(rider_id)` — Auto-verify Aadhaar/PAN/DL/Bank via mock APIs
+- `send_kyc_approved_notification(rider_id)` — WhatsApp/Firebase notification stub
+- `send_kyc_rejected_notification(rider_id, reason)` — Rejection notification
+- `send_activation_notification(rider_id)` — Activation notification
+- `trigger_kyc_verification_for_submitted()` — Periodic: process all SUBMITTED riders
+
+Check Celery logs:
+```bash
+docker logs yana_rider_celery -f
+```
+
+---
+
+## Security Notes
+
+### PII Encryption
+All sensitive fields (Aadhaar, PAN, DL, bank account) are encrypted using
+Fernet symmetric encryption before storage. Set `PII_ENCRYPTION_KEY` in
+production (a securely generated 32-byte base64 key).
+
+```bash
+# Generate a production PII key:
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+### JWT
+Both services share the same `JWT_SECRET_KEY`. In production, rotate this key
+regularly and consider moving to RS256 with separate public/private keys.
+
+### OTP
+In development, OTPs are logged to stdout (never in production).
+Set `OTP_SIMULATE=False` and configure your SMS gateway (Msg91/AWS SNS).
+
+---
+
+## Production Checklist
+
+- [ ] Change all default passwords and secrets in `.env`
+- [ ] Set `DEBUG=False`
+- [ ] Configure real SMS gateway for OTP
+- [ ] Set up AWS KMS / HashiCorp Vault for PII encryption key management
+- [ ] Enable HTTPS (SSL/TLS termination at load balancer)
+- [ ] Configure Prometheus metrics
+- [ ] Set up log aggregation (ELK/Loki)
+- [ ] Replace `gunicorn` with `uvicorn` for FastAPI services
+
+---
+
+## Next Services (Phase 2)
+
+- `fleet-service` — Vehicle CRUD, allotment engine, GPS telemetry
+- `payments-service` — Double-entry ledger, Razorpay integration, rent schedule
+- `marketplace-service` — Demand slots, rider matching, attendance
+- `maintenance-service` — Repair logs, cost tracking, alerts
+- `skills-service` — Videos, gamification, badges
+- `support-service` — Tickets, WhatsApp integration

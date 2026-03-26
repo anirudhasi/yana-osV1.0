@@ -1,0 +1,131 @@
+version: "3.9"
+
+services:
+  # ─── Infrastructure ──────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: yana_postgres
+    environment:
+      POSTGRES_DB: yana_os
+      POSTGRES_USER: yana_user
+      POSTGRES_PASSWORD: yana_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yana_user -d yana_os"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: yana_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: yana_minio
+    environment:
+      MINIO_ROOT_USER: yana_minio
+      MINIO_ROOT_PASSWORD: yana_minio_secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Auth Service ─────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: yana_auth
+    env_file:
+      - ./services/auth-service/.env
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/auth-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8001"
+
+  # ─── Rider Service ────────────────────────────────────────────
+  rider-service:
+    build:
+      context: ./services/rider-service
+      dockerfile: Dockerfile
+    container_name: yana_rider
+    env_file:
+      - ./services/rider-service/.env
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    volumes:
+      - ./services/rider-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8002"
+
+  # ─── Rider Service Celery Worker ──────────────────────────────
+  rider-celery:
+    build:
+      context: ./services/rider-service
+      dockerfile: Dockerfile
+    container_name: yana_rider_celery
+    env_file:
+      - ./services/rider-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/rider-service:/app
+    command: celery -A rider_service.celery worker --loglevel=info --concurrency=4
+
+  # ─── API Gateway (Nginx) ──────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: yana_nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - auth-service
+      - rider-service
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
