@@ -4,18 +4,18 @@ services:
     runtime: docker
     plan: free
     region: ohio
-    rootDir: ./api-gateway
+    rootDir: api-gateway
     dockerContext: .
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
 
   - name: auth-service
     type: pserv
     runtime: docker
     plan: starter
     region: ohio
-    rootDir: ./services/auth-service
+    rootDir: services/auth-service
     dockerContext: .
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
     dockerCommand: sh -c "python manage.py migrate --noinput && gunicorn auth_service.wsgi:application --bind 0.0.0.0:8001 --workers 2 --timeout 60"
     envVars:
       - key: DEBUG
@@ -43,9 +43,9 @@ services:
     runtime: docker
     plan: starter
     region: ohio
-    rootDir: ./services/rider-service
+    rootDir: services/rider-service
     dockerContext: .
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
     dockerCommand: sh -c "python manage.py migrate --noinput && gunicorn rider_service.wsgi:application --bind 0.0.0.0:8002 --workers 2 --timeout 60"
     envVars:
       - key: DEBUG
@@ -99,9 +99,9 @@ services:
     runtime: docker
     plan: starter
     region: ohio
-    rootDir: ./docker/minio
+    rootDir: docker/minio
     dockerContext: .
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
     dockerCommand: server /data --console-address ":9001"
     envVars:
       - key: MINIO_ROOT_USER
