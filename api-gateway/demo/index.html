@@ -280,12 +280,13 @@
   <div class="wrap">
     <section class="hero">
       <h1>Yana OS Local Demo</h1>
-      <p>Browser-based test harness for admin login, rider OTP login, rider onboarding, and fleet operations.</p>
+      <p>Browser-based test harness for admin login, rider OTP login, rider onboarding, fleet operations, and payments flows.</p>
       <div class="linkbar">
         <a href="/health/">Gateway Health</a>
         <a href="http://localhost:8001/api/docs/" target="_blank" rel="noreferrer">Auth Docs</a>
         <a href="http://localhost:8002/api/docs/" target="_blank" rel="noreferrer">Rider Docs</a>
         <a href="http://localhost:8003/api/docs/" target="_blank" rel="noreferrer">Fleet Docs</a>
+        <a href="http://localhost:8004/api/docs/" target="_blank" rel="noreferrer">Payments Docs</a>
       </div>
     </section>
 
@@ -434,6 +435,50 @@
         <div id="fleet-list-card" class="cards"></div>
         <div id="fleet-detail-card" class="cards"></div>
       </section>
+
+      <section class="panel">
+        <h2>Payments Ops</h2>
+        <p class="subtle">Use rider and admin tokens to inspect wallet, ledger, rent, and platform payment summary.</p>
+
+        <div class="controls">
+          <div class="row">
+            <label>
+              Payments Rider ID
+              <input id="payments-rider-id" placeholder="Defaults to verified rider ID">
+            </label>
+            <label>
+              Top-up Amount
+              <input id="payments-topup-amount" type="number" value="250">
+            </label>
+          </div>
+
+          <div class="row">
+            <label>
+              Adjustment Amount
+              <input id="payments-adjust-amount" type="number" value="100">
+            </label>
+            <label>
+              Adjustment Description
+              <input id="payments-adjust-desc" value="Demo adjustment">
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="payments-wallet-btn" class="mini">Wallet Summary</button>
+            <button id="payments-ledger-btn" class="mini alt">Wallet Ledger</button>
+            <button id="payments-rent-btn" class="mini">Rent Schedule</button>
+            <button id="payments-overdue-btn" class="mini alt">Overdue Rent</button>
+            <button id="payments-topup-btn" class="mini">Initiate Top-up</button>
+            <button id="payments-adjust-btn" class="mini alt">Admin Adjust</button>
+            <button id="payments-summary-btn" class="mini">Admin Summary</button>
+          </div>
+        </div>
+
+        <div id="payments-status" class="status info">Verify a rider or paste a rider ID, then use the payments buttons to inspect wallet and rent flows.</div>
+        <div id="payments-wallet-card" class="cards"></div>
+        <div id="payments-list-card" class="cards"></div>
+        <div id="payments-summary-card" class="cards"></div>
+      </section>
       </div>
     </div>
 
@@ -451,6 +496,7 @@
       riderId: "",
       fleetVehicleId: "",
       fleetAlertId: "",
+      lastTopupOrderId: "",
     };
 
     const el = (id) => document.getElementById(id);
@@ -705,6 +751,60 @@
       `;
     }
 
+    function getPaymentsRiderId() {
+      return el("payments-rider-id").value.trim() || el("rider-id").value.trim() || state.riderId || getSelectedRiderId();
+    }
+
+    function renderPaymentsWallet(data) {
+      el("payments-wallet-card").innerHTML = `
+        <div class="card">
+          <strong>Wallet Summary</strong>
+          <div class="meta">
+            <span class="pill">Balance ${data.balance ?? 0}</span>
+            <span class="pill">Security Deposit ${data.security_deposit_held ?? 0}</span>
+            <span class="pill">Overdraft ${data.overdraft_limit ?? 0}</span>
+          </div>
+          <div class="meta">
+            <span>Rider ${data.rider_id || ""}</span>
+            <span>Wallet ${data.wallet_id || ""}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPaymentsList(title, items, mapper) {
+      const root = el("payments-list-card");
+      if (!items.length) {
+        root.innerHTML = `<div class="card"><strong>${title}</strong><div>No records found.</div></div>`;
+        return;
+      }
+      root.innerHTML = items.map(mapper).join("");
+    }
+
+    function renderPaymentsSummary(data) {
+      el("payments-summary-card").innerHTML = `
+        <div class="card">
+          <strong>Platform Payments Summary</strong>
+          <div class="meta">
+            <span class="pill">Credits ${data.financial_summary.total_credits}</span>
+            <span class="pill">Debits ${data.financial_summary.total_debits}</span>
+            <span class="pill">Rent Today ${data.financial_summary.rent_collected_today}</span>
+            <span class="pill">Rent MTD ${data.financial_summary.rent_collected_mtd}</span>
+          </div>
+          <div class="meta">
+            <span class="pill">Overdue Count ${data.overdue.count}</span>
+            <span class="pill">Overdue Amount ${data.overdue.total_amount}</span>
+            <span class="pill">Penalties ${data.overdue.total_penalties}</span>
+          </div>
+          <div class="meta">
+            <span class="pill">Wallet Balance ${data.wallets.total_balance}</span>
+            <span class="pill">Deposits Held ${data.wallets.deposits_held}</span>
+            <span class="pill">Active Wallets ${data.wallets.active_wallets}</span>
+          </div>
+        </div>
+      `;
+    }
+
     function getSelectedRiderId() {
       return el("selected-rider-id").value.trim();
     }
@@ -734,6 +834,18 @@
     function requireAdminForFleet() {
       if (!state.adminToken) {
         setStatus("fleet-status", "error", "Log in as admin first.");
+        return false;
+      }
+      return true;
+    }
+
+    function requireRiderOrAdminForPayments() {
+      if (!getPaymentsRiderId()) {
+        setStatus("payments-status", "error", "Verify a rider first or paste a rider ID.");
+        return false;
+      }
+      if (!state.riderToken && !state.adminToken) {
+        setStatus("payments-status", "error", "You need a rider or admin token first.");
         return false;
       }
       return true;
@@ -942,6 +1054,7 @@
         state.riderToken = body.data.tokens.access_token;
         state.riderId = body.data.rider_id;
         el("rider-id").value = state.riderId;
+        el("payments-rider-id").value = state.riderId;
         setStatus("rider-status", "ok", "Rider OTP verified. Rider token stored in browser memory.");
       } catch (error) {
         setStatus("rider-status", "error", error.message);
@@ -1164,6 +1277,185 @@
         setStatus("fleet-status", "error", error.message);
       } finally {
         setLoading("fleet-ack-alert-btn", false);
+      }
+    });
+
+    el("payments-wallet-btn").addEventListener("click", async () => {
+      if (!requireRiderOrAdminForPayments()) return;
+      setLoading("payments-wallet-btn", true);
+      try {
+        const riderId = getPaymentsRiderId();
+        const token = state.riderToken || state.adminToken;
+        const body = await api("/api/v1/payments/wallets/" + riderId + "/", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        renderPaymentsWallet(body.data);
+        setStatus("payments-status", "ok", "Wallet summary loaded successfully.");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-wallet-btn", false);
+      }
+    });
+
+    el("payments-ledger-btn").addEventListener("click", async () => {
+      if (!requireRiderOrAdminForPayments()) return;
+      setLoading("payments-ledger-btn", true);
+      try {
+        const riderId = getPaymentsRiderId();
+        const token = state.riderToken || state.adminToken;
+        const body = await api("/api/v1/payments/wallets/" + riderId + "/ledger/", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        renderPaymentsList("Ledger", body.data.results || [], (item) => `
+          <div class="card">
+            <strong>${item.payment_type || "Entry"}</strong>
+            <div class="meta">
+              <span class="pill">${item.direction}</span>
+              <span>Amount ${item.amount}</span>
+              <span>Balance ${item.balance_after}</span>
+            </div>
+            <div class="meta">
+              <span>${item.description || ""}</span>
+              <span>${item.accounting_date || ""}</span>
+            </div>
+          </div>
+        `);
+        setStatus("payments-status", "ok", "Wallet ledger loaded successfully.");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-ledger-btn", false);
+      }
+    });
+
+    el("payments-rent-btn").addEventListener("click", async () => {
+      if (!requireRiderOrAdminForPayments()) return;
+      setLoading("payments-rent-btn", true);
+      try {
+        const riderId = getPaymentsRiderId();
+        const token = state.riderToken || state.adminToken;
+        const body = await api("/api/v1/payments/rent/" + riderId + "/schedule/", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        renderPaymentsList("Rent Schedule", body.data.results || [], (item) => `
+          <div class="card">
+            <strong>${item.status}</strong>
+            <div class="meta">
+              <span class="pill">Due ${item.amount}</span>
+              <span class="pill">Penalty ${item.overdue_penalty || 0}</span>
+              <span>${item.due_date || ""}</span>
+            </div>
+          </div>
+        `);
+        setStatus("payments-status", "ok", "Rent schedule loaded successfully.");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-rent-btn", false);
+      }
+    });
+
+    el("payments-overdue-btn").addEventListener("click", async () => {
+      if (!requireRiderOrAdminForPayments()) return;
+      setLoading("payments-overdue-btn", true);
+      try {
+        const riderId = getPaymentsRiderId();
+        const token = state.riderToken || state.adminToken;
+        const body = await api("/api/v1/payments/rent/" + riderId + "/overdue/", {
+          headers: { Authorization: "Bearer " + token },
+        });
+        renderPaymentsList("Overdue Rent", body.data.schedules || [], (item) => `
+          <div class="card">
+            <strong>${item.status}</strong>
+            <div class="meta">
+              <span class="pill">Amount ${item.amount}</span>
+              <span class="pill">Penalty ${item.overdue_penalty || 0}</span>
+              <span>${item.due_date || ""}</span>
+            </div>
+          </div>
+        `);
+        setStatus("payments-status", "ok", "Overdue rent loaded successfully.");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-overdue-btn", false);
+      }
+    });
+
+    el("payments-topup-btn").addEventListener("click", async () => {
+      if (!requireRiderOrAdminForPayments()) return;
+      setLoading("payments-topup-btn", true);
+      try {
+        const riderId = getPaymentsRiderId();
+        const token = state.riderToken || state.adminToken;
+        const body = await api("/api/v1/payments/wallets/" + riderId + "/topup/", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: Number(el("payments-topup-amount").value || 0),
+          }),
+        });
+        state.lastTopupOrderId = body.data.razorpay_order_id || "";
+        setStatus("payments-status", "ok", "Top-up initiated. Order " + (state.lastTopupOrderId || "created") + ".");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-topup-btn", false);
+      }
+    });
+
+    el("payments-adjust-btn").addEventListener("click", async () => {
+      if (!state.adminToken) {
+        setStatus("payments-status", "error", "Admin login required for wallet adjustment.");
+        return;
+      }
+      const riderId = getPaymentsRiderId();
+      if (!riderId) {
+        setStatus("payments-status", "error", "Select or verify a rider first.");
+        return;
+      }
+      setLoading("payments-adjust-btn", true);
+      try {
+        const body = await api("/api/v1/payments/wallets/" + riderId + "/adjust/", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + state.adminToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: Number(el("payments-adjust-amount").value || 0),
+            direction: "CREDIT",
+            description: el("payments-adjust-desc").value.trim() || "Demo adjustment",
+          }),
+        });
+        setStatus("payments-status", "ok", body.data.message || "Adjustment applied.");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-adjust-btn", false);
+      }
+    });
+
+    el("payments-summary-btn").addEventListener("click", async () => {
+      if (!state.adminToken) {
+        setStatus("payments-status", "error", "Admin login required for payment summary.");
+        return;
+      }
+      setLoading("payments-summary-btn", true);
+      try {
+        const body = await api("/api/v1/payments/admin/summary/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderPaymentsSummary(body.data);
+        setStatus("payments-status", "ok", "Admin payment summary loaded successfully.");
+      } catch (error) {
+        setStatus("payments-status", "error", error.message);
+      } finally {
+        setLoading("payments-summary-btn", false);
       }
     });
   </script>
