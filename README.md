@@ -79,6 +79,10 @@ curl http://localhost:8081/health/   # nginx gateway
 - Gateway Health: http://localhost:8081/health/
 - Demo UI: http://localhost:8081/demo/index.html
 
+The demo UI is now configurable for cloud deployment:
+- local default config: `api-gateway/demo/config.js`
+- example cloud config: `api-gateway/demo/config.example.js`
+
 ### 6. MinIO Console
 http://localhost:9001 (user: yana_minio / pass: yana_minio_secret)
 
@@ -234,28 +238,33 @@ curl -X POST http://localhost:8081/api/v1/auth/rider/verify-otp \
 
 ---
 
-## Demo Deployment
+## Cloud Deployment
 
-This repo now includes a Render Blueprint:
-- [render.yaml](C:\Users\sangi\OneDrive\Documents\Anirudh\Yana\yana-osV1.0\render.yaml)
+### Railway + Netlify
 
-It provisions:
-- public gateway with demo UI
-- private `auth-service`
-- private `rider-service`
-- private MinIO
-- Render Postgres
-- Render Key Value
+The cleanest cloud fallback for this repo is:
+- Railway for backend services
+- Railway or Netlify for the demo UI
 
-After you push to GitHub:
-1. Open Render
-2. Create a new Blueprint from this repo
-3. Select `render.yaml`
-4. Apply the Blueprint
-5. Once the gateway deploy is live, share that public gateway URL with the client
+Files included for that path:
+- `RAILWAY.md`
+- `netlify.toml`
+- `api-gateway/demo/config.js`
+- `api-gateway/demo/config.example.js`
 
-Client demo URL pattern:
-- `https://<render-gateway-url>/demo/index.html`
+Recommended flow:
+1. Deploy `auth-service`, `rider-service`, `fleet-service`, `fleet-telemetry`, `payments-service`, and `api-gateway` on Railway.
+2. Set the gateway upstream env vars to the Railway service URLs.
+3. If you want a separate static client URL, deploy `api-gateway/demo` to Netlify.
+4. Point `api-gateway/demo/config.js` at the public Railway gateway URL.
+
+Client demo URL patterns:
+- Railway gateway: `https://<railway-gateway-url>/demo/index.html`
+- Netlify UI: `https://<netlify-site>.netlify.app`
+
+### Render
+
+This repo still includes a Render Blueprint in `render.yaml`, but Railway + Netlify is the recommended fallback if Render monorepo Docker deployment is unreliable.
 
 ---
 

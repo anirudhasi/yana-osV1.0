@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Yana OS Demo</title>
+  <script src="./config.js"></script>
   <style>
     :root {
       --bg: #f4efe6;
@@ -281,13 +282,7 @@
     <section class="hero">
       <h1>Yana OS Local Demo</h1>
       <p>Browser-based test harness for admin login, rider OTP login, rider onboarding, fleet operations, and payments flows.</p>
-      <div class="linkbar">
-        <a href="/health/">Gateway Health</a>
-        <a href="http://localhost:8001/api/docs/" target="_blank" rel="noreferrer">Auth Docs</a>
-        <a href="http://localhost:8002/api/docs/" target="_blank" rel="noreferrer">Rider Docs</a>
-        <a href="http://localhost:8003/api/docs/" target="_blank" rel="noreferrer">Fleet Docs</a>
-        <a href="http://localhost:8004/api/docs/" target="_blank" rel="noreferrer">Payments Docs</a>
-      </div>
+      <div class="linkbar" id="linkbar"></div>
     </section>
 
     <div class="grid">
@@ -490,6 +485,8 @@
   </div>
 
   <script>
+    const API_BASE = (window.YANA_DEMO_CONFIG && window.YANA_DEMO_CONFIG.apiBase || "").replace(/\/$/, "");
+
     const state = {
       adminToken: "",
       riderToken: "",
@@ -516,8 +513,21 @@
       el("debug-output").textContent = JSON.stringify(data, null, 2);
     }
 
+    function buildUrl(path) {
+      return API_BASE ? API_BASE + path : path;
+    }
+
+    function renderLinks() {
+      const root = el("linkbar");
+      const gatewayBase = API_BASE || window.location.origin;
+      root.innerHTML = `
+        <a href="${gatewayBase}/health/" target="_blank" rel="noreferrer">Gateway Health</a>
+        <a href="${gatewayBase}/demo/index.html" target="_blank" rel="noreferrer">Demo UI</a>
+      `;
+    }
+
     async function api(path, options) {
-      const response = await fetch(path, options);
+      const response = await fetch(buildUrl(path), options);
       const text = await response.text();
       let json = {};
 
@@ -528,7 +538,7 @@
       }
 
       showDebug({
-        path,
+        path: buildUrl(path),
         status: response.status,
         body: json,
       });
@@ -850,6 +860,8 @@
       }
       return true;
     }
+
+    renderLinks();
 
     el("admin-login-btn").addEventListener("click", async () => {
       setLoading("admin-login-btn", true);

@@ -204,13 +204,12 @@ services:
 
   # ─── API Gateway (Nginx) ──────────────────────────────────────
   nginx:
-    image: nginx:alpine
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
     container_name: yana_nginx
     ports:
       - "8081:80"
-    volumes:
-      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./api-gateway/demo:/usr/share/nginx/html/demo:ro
     depends_on:
       - auth-service
       - rider-service

@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+: "${PORT:=80}"
+: "${AUTH_SERVICE_HOST:=auth-service:8001}"
+: "${RIDER_SERVICE_HOST:=rider-service:8002}"
+: "${FLEET_SERVICE_HOST:=fleet-service:8003}"
+: "${FLEET_TELEMETRY_HOST:=fleet-telemetry:8013}"
+: "${PAYMENTS_SERVICE_HOST:=payments-service:8004}"
+
+: "${AUTH_SERVICE_URL:=http://${AUTH_SERVICE_HOST}}"
+: "${RIDER_SERVICE_URL:=http://${RIDER_SERVICE_HOST}}"
+: "${FLEET_SERVICE_URL:=http://${FLEET_SERVICE_HOST}}"
+: "${FLEET_TELEMETRY_URL:=http://${FLEET_TELEMETRY_HOST}}"
+: "${PAYMENTS_SERVICE_URL:=http://${PAYMENTS_SERVICE_HOST}}"
+
+envsubst '${PORT} ${AUTH_SERVICE_HOST} ${RIDER_SERVICE_HOST} ${FLEET_SERVICE_HOST} ${FLEET_TELEMETRY_HOST} ${PAYMENTS_SERVICE_HOST} ${AUTH_SERVICE_URL} ${RIDER_SERVICE_URL} ${FLEET_SERVICE_URL} ${FLEET_TELEMETRY_URL} ${PAYMENTS_SERVICE_URL}' \
+  < /etc/nginx/templates/nginx.conf.template \
+  > /etc/nginx/nginx.conf
