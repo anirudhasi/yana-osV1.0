@@ -23,6 +23,7 @@ yana-os/
 | auth-service  | 8001 | Django | Admin JWT login, Rider OTP auth           |
 | rider-service | 8002 | Django | Rider onboarding, KYC, document uploads   |
 | fleet-service | 8003 | Django | Fleet hubs, vehicles, allotments, alerts  |
+| payments-service | 8004 | Django | Wallets, ledger, rent schedules, payments |
 | fleet-telemetry | 8013 | FastAPI | GPS telemetry ingestion and live feed   |
 | nginx         | 8081 | Nginx  | API gateway, rate limiting, routing       |
 | postgres      | 5432 | PG 15  | Primary relational DB                     |
@@ -59,6 +60,7 @@ Note:
 curl http://localhost:8001/health/   # auth service
 curl http://localhost:8002/health/   # rider service
 curl http://localhost:8003/health/   # fleet service
+curl http://localhost:8004/health/   # payments service
 curl http://localhost:8081/health/   # nginx gateway
 ```
 
@@ -73,6 +75,7 @@ curl http://localhost:8081/health/   # nginx gateway
 - Auth Service:  http://localhost:8001/api/docs/
 - Rider Service: http://localhost:8002/api/docs/
 - Fleet Service: http://localhost:8003/api/docs/
+- Payments Service: http://localhost:8004/api/docs/
 - Gateway Health: http://localhost:8081/health/
 - Demo UI: http://localhost:8081/demo/index.html
 
@@ -138,6 +141,24 @@ GET    /telemetry/live/{vehicle_id}                       Live vehicle telemetry
 GET    /telemetry/fleet/live                              Fleet live positions
 ```
 
+### Payments Service (via gateway: localhost:8081)
+
+```
+GET    /api/v1/payments/wallets/{rider_id}/               Wallet summary
+GET    /api/v1/payments/wallets/{rider_id}/ledger/        Wallet ledger
+POST   /api/v1/payments/wallets/{rider_id}/topup/         Initiate top-up
+POST   /api/v1/payments/wallets/{rider_id}/topup/confirm/ Confirm top-up
+POST   /api/v1/payments/wallets/{rider_id}/adjust/        Admin wallet adjustment
+POST   /api/v1/payments/wallets/{rider_id}/incentive/     Incentive credit
+POST   /api/v1/payments/wallets/{rider_id}/upi-mandate/   Create UPI mandate
+GET    /api/v1/payments/rent/{rider_id}/schedule/         Rent schedule
+GET    /api/v1/payments/rent/{rider_id}/overdue/          Overdue rent items
+POST   /api/v1/payments/rent/schedule/create/             Create rent schedule
+GET    /api/v1/payments/transactions/{rider_id}/          Transaction history
+POST   /api/v1/payments/webhooks/razorpay/                Razorpay webhook
+GET    /api/v1/payments/admin/summary/                    Admin payment summary
+```
+
 ---
 
 ## Rider Onboarding State Machine
@@ -168,6 +189,9 @@ docker exec yana_rider python manage.py test tests --verbosity=2
 
 # Fleet service
 docker exec yana_fleet python manage.py test tests --verbosity=2
+
+# Payments service
+docker exec yana_payments python manage.py test tests --verbosity=2
 ```
 
 ---

@@ -166,6 +166,42 @@ services:
       --host 0.0.0.0 --port 8013
       --workers 2 --loop uvloop
 
+  payments-service:
+    build:
+      context: ./services/payments-service
+      dockerfile: Dockerfile
+    container_name: yana_payments
+    env_file:
+      - ./services/payments-service/.env
+    ports:
+      - "8004:8004"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/payments-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8004"
+
+  payments-celery:
+    build:
+      context: ./services/payments-service
+      dockerfile: Dockerfile
+    container_name: yana_payments_celery
+    env_file:
+      - ./services/payments-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/payments-service:/app
+    command: celery -A payments_service.celery worker --loglevel=info --concurrency=4 -B
+
   # ─── API Gateway (Nginx) ──────────────────────────────────────
   nginx:
     image: nginx:alpine
@@ -180,6 +216,7 @@ services:
       - rider-service
       - fleet-service
       - fleet-telemetry
+      - payments-service
 
 volumes:
   postgres_data:

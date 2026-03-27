@@ -165,6 +165,55 @@ services:
           type: keyvalue
           property: connectionString
 
+  - name: payments-service
+    type: pserv
+    runtime: docker
+    plan: starter
+    region: ohio
+    rootDir: services/payments-service
+    dockerContext: services/payments-service
+    dockerfilePath: services/payments-service/Dockerfile
+    dockerCommand: sh -c "python manage.py migrate --noinput && gunicorn payments_service.wsgi:application --bind 0.0.0.0:8004 --workers 2 --timeout 60"
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "*"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        fromService:
+          name: auth-service
+          type: pserv
+          envVarKey: JWT_SECRET_KEY
+      - key: DATABASE_URL
+        fromDatabase:
+          name: yana-os-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: yana-os-cache
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          name: yana-os-cache
+          type: keyvalue
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          name: yana-os-cache
+          type: keyvalue
+          property: connectionString
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_placeholder
+      - key: RAZORPAY_KEY_SECRET
+        value: placeholder_secret
+      - key: RAZORPAY_WEBHOOK_SECRET
+        value: placeholder_webhook
+      - key: RAZORPAY_SIMULATE
+        value: "True"
+
   - name: yana-os-minio
     type: pserv
     runtime: docker
