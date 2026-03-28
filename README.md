@@ -24,6 +24,7 @@ yana-os/
 | rider-service | 8002 | Django | Rider onboarding, KYC, document uploads   |
 | fleet-service | 8003 | Django | Fleet hubs, vehicles, allotments, alerts  |
 | payments-service | 8004 | Django | Wallets, ledger, rent schedules, payments |
+| marketplace-service | 8005 | Django | Demand slots, applications, attendance, earnings |
 | fleet-telemetry | 8013 | FastAPI | GPS telemetry ingestion and live feed   |
 | nginx         | 8081 | Nginx  | API gateway, rate limiting, routing       |
 | postgres      | 5432 | PG 15  | Primary relational DB                     |
@@ -61,6 +62,7 @@ curl http://localhost:8001/health/   # auth service
 curl http://localhost:8002/health/   # rider service
 curl http://localhost:8003/health/   # fleet service
 curl http://localhost:8004/health/   # payments service
+curl http://localhost:8005/health/   # marketplace service
 curl http://localhost:8081/health/   # nginx gateway
 ```
 
@@ -76,6 +78,7 @@ curl http://localhost:8081/health/   # nginx gateway
 - Rider Service: http://localhost:8002/api/docs/
 - Fleet Service: http://localhost:8003/api/docs/
 - Payments Service: http://localhost:8004/api/docs/
+- Marketplace Service: http://localhost:8005/api/docs/
 - Gateway Health: http://localhost:8081/health/
 - Demo UI: http://localhost:8081/demo/index.html
 
@@ -161,6 +164,27 @@ POST   /api/v1/payments/rent/schedule/create/             Create rent schedule
 GET    /api/v1/payments/transactions/{rider_id}/          Transaction history
 POST   /api/v1/payments/webhooks/razorpay/                Razorpay webhook
 GET    /api/v1/payments/admin/summary/                    Admin payment summary
+```
+
+### Marketplace Service (via gateway: localhost:8081)
+
+```
+GET    /api/v1/marketplace/clients/                       List clients
+POST   /api/v1/marketplace/clients/                       Create client
+GET    /api/v1/marketplace/dark-stores/                   List dark stores
+POST   /api/v1/marketplace/dark-stores/                   Create dark store
+GET    /api/v1/marketplace/demand-slots/                  List demand slots
+POST   /api/v1/marketplace/demand-slots/                  Create demand slot
+POST   /api/v1/marketplace/demand-slots/{id}/match/       Run rider matching
+GET    /api/v1/marketplace/applications/                  List applications
+POST   /api/v1/marketplace/applications/                  Apply to a demand slot
+POST   /api/v1/marketplace/applications/{id}/shortlist/   Shortlist application
+POST   /api/v1/marketplace/applications/{id}/confirm/     Confirm application
+GET    /api/v1/marketplace/attendance/                    Attendance list
+POST   /api/v1/marketplace/attendance/check-in/           Rider check-in
+POST   /api/v1/marketplace/attendance/check-out/          Rider check-out
+GET    /api/v1/marketplace/earnings/{rider_id}/           Rider earnings summary
+GET    /api/v1/marketplace/admin/summary/                 Admin marketplace summary
 ```
 
 ---

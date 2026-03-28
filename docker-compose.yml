@@ -202,6 +202,42 @@ services:
       - ./services/payments-service:/app
     command: celery -A payments_service.celery worker --loglevel=info --concurrency=4 -B
 
+  marketplace-service:
+    build:
+      context: ./services/marketplace-service
+      dockerfile: Dockerfile
+    container_name: yana_marketplace
+    env_file:
+      - ./services/marketplace-service/.env
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/marketplace-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8005"
+
+  marketplace-celery:
+    build:
+      context: ./services/marketplace-service
+      dockerfile: Dockerfile
+    container_name: yana_marketplace_celery
+    env_file:
+      - ./services/marketplace-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/marketplace-service:/app
+    command: celery -A marketplace_service.celery worker --loglevel=info --concurrency=4 -B
+
   # ─── API Gateway (Nginx) ──────────────────────────────────────
   nginx:
     build:
@@ -216,6 +252,7 @@ services:
       - fleet-service
       - fleet-telemetry
       - payments-service
+      - marketplace-service
 
 volumes:
   postgres_data:

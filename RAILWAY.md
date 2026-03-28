@@ -12,7 +12,7 @@ This repo can be deployed without Render by using:
 
 If you deploy the gateway publicly on Railway, the simplest setup is:
 
-1. Deploy `auth-service`, `rider-service`, `fleet-service`, `fleet-telemetry`, and `payments-service` to Railway.
+1. Deploy `auth-service`, `rider-service`, `fleet-service`, `fleet-telemetry`, `payments-service`, and `marketplace-service` to Railway.
 2. Deploy `api-gateway` to Railway with environment-based upstream URLs.
 3. Deploy `api-gateway/demo` to Netlify and point it at the Railway gateway URL via `config.js`.
 
@@ -30,6 +30,8 @@ Create these Railway services from the monorepo:
   - Root directory: `services/fleet-service`
 - `payments-service`
   - Root directory: `services/payments-service`
+- `marketplace-service`
+  - Root directory: `services/marketplace-service`
 - `api-gateway`
   - Root directory: `api-gateway`
 
@@ -47,6 +49,7 @@ Set these on the Railway `api-gateway` service:
 - `FLEET_SERVICE_URL=https://<public-or-private-fleet-url>`
 - `FLEET_TELEMETRY_URL=https://<public-or-private-telemetry-url>`
 - `PAYMENTS_SERVICE_URL=https://<public-or-private-payments-url>`
+- `MARKETPLACE_SERVICE_URL=https://<public-or-private-marketplace-url>`
 
 If Railway gives you private service domains, use those instead of public URLs.
 
