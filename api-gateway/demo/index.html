@@ -474,6 +474,70 @@
         <div id="payments-list-card" class="cards"></div>
         <div id="payments-summary-card" class="cards"></div>
       </section>
+
+      <section class="panel">
+        <h2>Marketplace Ops</h2>
+        <p class="subtle">Inspect marketplace clients, slots, matches, and rider applications from the live gateway.</p>
+
+        <div class="controls">
+          <div class="row">
+            <label>
+              Marketplace Rider ID
+              <input id="marketplace-rider-id" placeholder="Defaults to verified rider ID">
+            </label>
+            <label>
+              Selected Client ID
+              <input id="marketplace-client-id" placeholder="Pick from clients list">
+            </label>
+          </div>
+
+          <div class="row">
+            <label>
+              Selected Slot ID
+              <input id="marketplace-slot-id" placeholder="Pick from slots list">
+            </label>
+            <label>
+              Selected Application ID
+              <input id="marketplace-application-id" placeholder="Pick from applications list">
+            </label>
+          </div>
+
+          <div class="row">
+            <label>
+              Slot Status Filter
+              <select id="marketplace-slot-status">
+                <option value="">All statuses</option>
+                <option value="DRAFT">DRAFT</option>
+                <option value="PUBLISHED">PUBLISHED</option>
+                <option value="PARTIALLY_FILLED">PARTIALLY_FILLED</option>
+                <option value="FILLED">FILLED</option>
+                <option value="CANCELLED">CANCELLED</option>
+              </select>
+            </label>
+            <label>
+              Bulk Confirm Count
+              <input id="marketplace-confirm-count" type="number" value="1" min="1">
+            </label>
+          </div>
+
+          <div class="actions">
+            <button id="marketplace-dashboard-btn" class="mini">Dashboard</button>
+            <button id="marketplace-clients-btn" class="mini alt">Load Clients</button>
+            <button id="marketplace-slots-btn" class="mini">Load Slots</button>
+            <button id="marketplace-publish-btn" class="mini alt">Publish Slot</button>
+            <button id="marketplace-matches-btn" class="mini">Load Matches</button>
+            <button id="marketplace-slot-apps-btn" class="mini alt">Slot Applications</button>
+            <button id="marketplace-bulk-confirm-btn" class="mini">Bulk Confirm</button>
+            <button id="marketplace-apply-btn" class="mini alt">Apply To Slot</button>
+            <button id="marketplace-rider-apps-btn" class="mini">My Applications</button>
+          </div>
+        </div>
+
+        <div id="marketplace-status" class="status info">Use the admin token for client and slot ops, and the rider token for apply and rider application history.</div>
+        <div id="marketplace-dashboard-card" class="cards"></div>
+        <div id="marketplace-list-card" class="cards"></div>
+        <div id="marketplace-detail-card" class="cards"></div>
+      </section>
       </div>
     </div>
 
@@ -494,6 +558,9 @@
       fleetVehicleId: "",
       fleetAlertId: "",
       lastTopupOrderId: "",
+      marketplaceClientId: "",
+      marketplaceSlotId: "",
+      marketplaceApplicationId: "",
     };
 
     const el = (id) => document.getElementById(id);
@@ -815,6 +882,98 @@
       `;
     }
 
+    function renderMarketplaceDashboard(data) {
+      const slots = data.slots || {};
+      const apps = data.applications || {};
+      const topClients = data.top_clients || [];
+      el("marketplace-dashboard-card").innerHTML = `
+        <div class="card">
+          <strong>Marketplace Dashboard</strong>
+          <div class="meta">
+            <span class="pill">Slots ${slots.total || 0}</span>
+            <span class="pill">Published Today ${slots.published_today || 0}</span>
+            <span class="pill">Filled This Week ${slots.filled_this_week || 0}</span>
+            <span class="pill">Avg Fill ${Number(slots.avg_fill_rate || 0).toFixed(2)}</span>
+          </div>
+          <div class="meta">
+            <span class="pill">Applications ${apps.total_apps || 0}</span>
+            <span class="pill">Confirmed Today ${apps.confirmed_today || 0}</span>
+            <span class="pill">Completed Week ${apps.completed_week || 0}</span>
+            <span class="pill">No Shows ${apps.no_shows_week || 0}</span>
+          </div>
+          <div class="section-title">Top Clients</div>
+          <div class="meta">${topClients.length ? topClients.map((client) => `<span class="pill">${client.name}: ${client.total_slots}</span>`).join("") : "No client activity yet."}</div>
+        </div>
+      `;
+    }
+
+    function renderMarketplaceList(title, items, mapper) {
+      const root = el("marketplace-list-card");
+      if (!items.length) {
+        root.innerHTML = `<div class="card"><strong>${title}</strong><div>No records found.</div></div>`;
+        return;
+      }
+
+      root.innerHTML = `<div class="card"><strong>${title}</strong></div>` + items.map(mapper).join("");
+
+      root.querySelectorAll(".pick-marketplace-client-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.marketplaceClientId = button.dataset.clientId;
+          el("marketplace-client-id").value = state.marketplaceClientId;
+          setStatus("marketplace-status", "ok", "Selected client: " + button.dataset.clientLabel);
+        });
+      });
+
+      root.querySelectorAll(".pick-marketplace-slot-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.marketplaceSlotId = button.dataset.slotId;
+          el("marketplace-slot-id").value = state.marketplaceSlotId;
+          setStatus("marketplace-status", "ok", "Selected slot: " + button.dataset.slotLabel);
+        });
+      });
+
+      root.querySelectorAll(".pick-marketplace-app-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.marketplaceApplicationId = button.dataset.applicationId;
+          el("marketplace-application-id").value = state.marketplaceApplicationId;
+          setStatus("marketplace-status", "ok", "Selected application: " + button.dataset.applicationLabel);
+        });
+      });
+    }
+
+    function renderMarketplaceDetail(title, data) {
+      el("marketplace-detail-card").innerHTML = `
+        <div class="card">
+          <strong>${title}</strong>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        </div>
+      `;
+    }
+
+    function requireAdminForMarketplace() {
+      if (!state.adminToken) {
+        setStatus("marketplace-status", "error", "Admin login required for marketplace admin actions.");
+        return false;
+      }
+      return true;
+    }
+
+    function requireRiderForMarketplace() {
+      if (!state.riderToken) {
+        setStatus("marketplace-status", "error", "Rider OTP verification required for marketplace rider actions.");
+        return false;
+      }
+      return true;
+    }
+
+    function getMarketplaceSlotId() {
+      return el("marketplace-slot-id").value.trim() || state.marketplaceSlotId;
+    }
+
+    function getMarketplaceRiderId() {
+      return el("marketplace-rider-id").value.trim() || state.riderId;
+    }
+
     function getSelectedRiderId() {
       return el("selected-rider-id").value.trim();
     }
@@ -1067,6 +1226,7 @@
         state.riderId = body.data.rider_id;
         el("rider-id").value = state.riderId;
         el("payments-rider-id").value = state.riderId;
+        el("marketplace-rider-id").value = state.riderId;
         setStatus("rider-status", "ok", "Rider OTP verified. Rider token stored in browser memory.");
       } catch (error) {
         setStatus("rider-status", "error", error.message);
@@ -1468,6 +1628,247 @@
         setStatus("payments-status", "error", error.message);
       } finally {
         setLoading("payments-summary-btn", false);
+      }
+    });
+
+    el("marketplace-dashboard-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      setLoading("marketplace-dashboard-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/analytics/dashboard/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderMarketplaceDashboard(body.data || body);
+        setStatus("marketplace-status", "ok", "Marketplace dashboard loaded successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-dashboard-btn", false);
+      }
+    });
+
+    el("marketplace-clients-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      setLoading("marketplace-clients-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/clients/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        const items = body.data?.results || body.results || [];
+        renderMarketplaceList("Clients", items, (client) => `
+          <div class="card">
+            <strong>${client.name}</strong>
+            <div class="meta">
+              <span class="pill">${client.category || "CLIENT"}</span>
+              <span>${client.primary_contact_name || ""}</span>
+              <span>${client.primary_contact_email || ""}</span>
+            </div>
+            <div class="actions">
+              <button class="mini pick-marketplace-client-btn" data-client-id="${client.id}" data-client-label="${client.name}">Select Client</button>
+            </div>
+          </div>
+        `);
+        setStatus("marketplace-status", "ok", "Marketplace clients loaded successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-clients-btn", false);
+      }
+    });
+
+    el("marketplace-slots-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      setLoading("marketplace-slots-btn", true);
+      try {
+        const statusValue = el("marketplace-slot-status").value;
+        const query = statusValue ? "?status=" + encodeURIComponent(statusValue) : "";
+        const body = await api("/api/v1/marketplace/slots/" + query, {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        const items = body.data?.results || body.results || [];
+        renderMarketplaceList("Demand Slots", items, (slot) => `
+          <div class="card">
+            <strong>${slot.title}</strong>
+            <div class="meta">
+              <span class="pill">${slot.status}</span>
+              <span>${slot.client_name || ""}</span>
+              <span>${slot.shift_date || ""}</span>
+              <span>Need ${slot.riders_required}</span>
+              <span>Remaining ${slot.spots_remaining}</span>
+            </div>
+            <div class="actions">
+              <button class="mini pick-marketplace-slot-btn" data-slot-id="${slot.id}" data-slot-label="${slot.title}">Select Slot</button>
+            </div>
+          </div>
+        `);
+        setStatus("marketplace-status", "ok", "Marketplace slots loaded successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-slots-btn", false);
+      }
+    });
+
+    el("marketplace-publish-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      const slotId = getMarketplaceSlotId();
+      if (!slotId) {
+        setStatus("marketplace-status", "error", "Select a slot first.");
+        return;
+      }
+      setLoading("marketplace-publish-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/slots/" + slotId + "/publish/", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderMarketplaceDetail("Published Slot", body.data || body);
+        setStatus("marketplace-status", "ok", "Marketplace slot published successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-publish-btn", false);
+      }
+    });
+
+    el("marketplace-matches-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      const slotId = getMarketplaceSlotId();
+      if (!slotId) {
+        setStatus("marketplace-status", "error", "Select a slot first.");
+        return;
+      }
+      setLoading("marketplace-matches-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/slots/" + slotId + "/matches/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        renderMarketplaceDetail("Slot Matches", body.data || body);
+        setStatus("marketplace-status", "ok", "Marketplace matches loaded or queued successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-matches-btn", false);
+      }
+    });
+
+    el("marketplace-slot-apps-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      const slotId = getMarketplaceSlotId();
+      if (!slotId) {
+        setStatus("marketplace-status", "error", "Select a slot first.");
+        return;
+      }
+      setLoading("marketplace-slot-apps-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/slots/" + slotId + "/applications/", {
+          headers: { Authorization: "Bearer " + state.adminToken },
+        });
+        const items = body.data?.results || body.results || [];
+        renderMarketplaceList("Slot Applications", items, (app) => `
+          <div class="card">
+            <strong>${app.slot_title || "Application"}</strong>
+            <div class="meta">
+              <span class="pill">${app.status}</span>
+              <span>Score ${app.match_score || 0}</span>
+              <span>${app.client_name || ""}</span>
+              <span>${app.dark_store_name || ""}</span>
+            </div>
+            <div class="actions">
+              <button class="mini pick-marketplace-app-btn" data-application-id="${app.id}" data-application-label="${app.slot_title || app.id}">Select Application</button>
+            </div>
+          </div>
+        `);
+        setStatus("marketplace-status", "ok", "Marketplace slot applications loaded successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-slot-apps-btn", false);
+      }
+    });
+
+    el("marketplace-bulk-confirm-btn").addEventListener("click", async () => {
+      if (!requireAdminForMarketplace()) return;
+      const slotId = getMarketplaceSlotId();
+      if (!slotId) {
+        setStatus("marketplace-status", "error", "Select a slot first.");
+        return;
+      }
+      setLoading("marketplace-bulk-confirm-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/slots/" + slotId + "/bulk-confirm/", {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + state.adminToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            count: Number(el("marketplace-confirm-count").value || 1),
+          }),
+        });
+        renderMarketplaceDetail("Bulk Confirm Result", body.data || body);
+        setStatus("marketplace-status", "ok", "Marketplace bulk confirm completed.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-bulk-confirm-btn", false);
+      }
+    });
+
+    el("marketplace-apply-btn").addEventListener("click", async () => {
+      if (!requireRiderForMarketplace()) return;
+      const slotId = getMarketplaceSlotId();
+      if (!slotId) {
+        setStatus("marketplace-status", "error", "Select a slot first.");
+        return;
+      }
+      setLoading("marketplace-apply-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/slots/" + slotId + "/apply/", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + state.riderToken },
+        });
+        renderMarketplaceDetail("Applied To Slot", body.data || body);
+        setStatus("marketplace-status", "ok", "Marketplace slot application submitted.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-apply-btn", false);
+      }
+    });
+
+    el("marketplace-rider-apps-btn").addEventListener("click", async () => {
+      if (!requireRiderForMarketplace()) return;
+      const riderId = getMarketplaceRiderId();
+      if (!riderId) {
+        setStatus("marketplace-status", "error", "Verify rider OTP first or enter a rider ID.");
+        return;
+      }
+      setLoading("marketplace-rider-apps-btn", true);
+      try {
+        const body = await api("/api/v1/marketplace/riders/" + riderId + "/applications/", {
+          headers: { Authorization: "Bearer " + state.riderToken },
+        });
+        const items = body.data?.results || body.results || [];
+        renderMarketplaceList("My Applications", items, (app) => `
+          <div class="card">
+            <strong>${app.slot_title || "Application"}</strong>
+            <div class="meta">
+              <span class="pill">${app.status}</span>
+              <span>${app.client_name || ""}</span>
+              <span>${app.dark_store_name || ""}</span>
+              <span>${app.slot_date || ""}</span>
+            </div>
+            <div class="actions">
+              <button class="mini pick-marketplace-app-btn" data-application-id="${app.id}" data-application-label="${app.slot_title || app.id}">Select Application</button>
+            </div>
+          </div>
+        `);
+        setStatus("marketplace-status", "ok", "Marketplace rider applications loaded successfully.");
+      } catch (error) {
+        setStatus("marketplace-status", "error", error.message);
+      } finally {
+        setLoading("marketplace-rider-apps-btn", false);
       }
     });
   </script>
