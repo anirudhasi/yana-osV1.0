@@ -1,5 +1,6 @@
 .docker-tmp/
 .zip-import/
+.zip-import-*/
 __pycache__/
 *.pyc
 *.pyo
@@ -7,3 +8,6 @@ __pycache__/
 .DS_Store
 celerybeat-schedule
 services/*/celerybeat-schedule
+admin-dashboard/node_modules/
+admin-dashboard/dist/
+admin-dashboard/.npm-cache/

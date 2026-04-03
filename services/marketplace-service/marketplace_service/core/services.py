@@ -17,9 +17,12 @@ from django.utils import timezone
 from .models import (
     DemandSlot, DemandApplication, DemandSlotAudit, Client, ClientDarkStore
 )
-from .authentication import (
-    SlotFullError, SlotNotPublishedError, AlreadyAppliedError,
-    AttendanceError, EarningsError,
+from .exceptions import (
+    SlotFullError,
+    SlotNotPublishedError,
+    AlreadyAppliedError,
+    AttendanceError,
+    EarningsError,
 )
 
 logger = logging.getLogger(__name__)

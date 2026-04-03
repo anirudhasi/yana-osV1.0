@@ -6,6 +6,7 @@ Production-grade monorepo backend for the Yana OS Rider + Fleet + Demand platfor
 
 ```
 yana-os/
+├── admin-dashboard/       # React admin dashboard for ops and analytics
 ├── api-gateway/           # Nginx reverse proxy config
 ├── docker/                # DB init scripts
 ├── docker-compose.yml     # Full local stack
@@ -25,8 +26,12 @@ yana-os/
 | fleet-service | 8003 | Django | Fleet hubs, vehicles, allotments, alerts  |
 | payments-service | 8004 | Django | Wallets, ledger, rent schedules, payments |
 | marketplace-service | 8005 | Django | Demand slots, applications, attendance, earnings |
+| maintenance-service | 8006 | Django | Repairs, work orders, maintenance costs, alerts |
+| skills-service | 8007 | Django | Training content, progress, badges, assessments |
+| support-service | 8008 | Django | Tickets, escalations, issue tracking, support workflows |
 | fleet-telemetry | 8013 | FastAPI | GPS telemetry ingestion and live feed   |
 | nginx         | 8081 | Nginx  | API gateway, rate limiting, routing       |
+| admin-dashboard | 3000 | React + Nginx | Admin dashboard UI for ops, analytics, and service workflows |
 | postgres      | 5432 | PG 15  | Primary relational DB                     |
 | redis         | 6379 | Redis  | OTP storage, Celery broker, cache         |
 | minio         | 9000 | MinIO  | S3-compatible document storage            |
@@ -55,6 +60,25 @@ Wait for all services to be healthy (~60 seconds on first run).
 
 Note:
 - This repo uses gateway port `8081` locally because `8000` was already occupied on this machine by another project.
+- The default compose stack starts the core services and gateway. Optional services can be included with `--profile optional`, and the React admin dashboard can be included with `--profile ui`.
+
+Examples:
+```bash
+# Core stack only
+docker compose up -d
+
+# Core stack + optional maintenance/skills/support services
+docker compose --profile optional up -d
+
+# Refresh the admin dashboard static bundle used by the ui profile
+npm.cmd --prefix admin-dashboard run build
+
+# Core stack + admin dashboard (uses admin-dashboard/dist via the static Docker image build)
+docker compose --profile ui up -d
+
+# Everything
+docker compose --profile optional --profile ui up -d
+```
 
 ### 3. Verify services
 ```bash
@@ -63,8 +87,20 @@ curl http://localhost:8002/health/   # rider service
 curl http://localhost:8003/health/   # fleet service
 curl http://localhost:8004/health/   # payments service
 curl http://localhost:8005/health/   # marketplace service
+curl http://localhost:8006/health/   # maintenance service
+curl http://localhost:8007/health/   # skills service
+curl http://localhost:8008/health/   # support service
 curl http://localhost:8081/health/   # nginx gateway
 ```
+
+Optional frontend:
+```bash
+open http://localhost:3000
+```
+
+UI profile note:
+- The `ui` profile now packages the prebuilt static files from `admin-dashboard/dist` into the Docker image by default.
+- If you change dashboard source files, rerun `npm.cmd --prefix admin-dashboard run build` before `docker compose --profile ui up -d --build`.
 
 ### 4. Seeded admin users
 | Email            | Password   | Role        |
@@ -79,8 +115,23 @@ curl http://localhost:8081/health/   # nginx gateway
 - Fleet Service: http://localhost:8003/api/docs/
 - Payments Service: http://localhost:8004/api/docs/
 - Marketplace Service: http://localhost:8005/api/docs/
+- Maintenance Service: http://localhost:8006/api/docs/
+- Skills Service: http://localhost:8007/api/docs/
+- Support Service: http://localhost:8008/api/docs/
 - Gateway Health: http://localhost:8081/health/
 - Demo UI: http://localhost:8081/demo/index.html
+- Admin Dashboard: http://localhost:3000
+
+Admin dashboard views already available:
+- `/login`
+- `/`
+- `/riders`
+- `/fleet`
+- `/payments`
+- `/marketplace`
+- `/maintenance`
+- `/skills`
+- `/support`
 
 The demo UI is now configurable for cloud deployment:
 - local default config: `api-gateway/demo/config.js`
@@ -187,6 +238,46 @@ GET    /api/v1/marketplace/earnings/{rider_id}/           Rider earnings summary
 GET    /api/v1/marketplace/admin/summary/                 Admin marketplace summary
 ```
 
+### Maintenance Service (via gateway: localhost:8081)
+
+```
+GET    /api/v1/maintenance/health/                        Service health/detail
+GET    /api/v1/maintenance/vehicles/                      Vehicles needing maintenance context
+GET    /api/v1/maintenance/work-orders/                   List work orders
+POST   /api/v1/maintenance/work-orders/                   Create work order
+GET    /api/v1/maintenance/work-orders/{id}/              Get work order detail
+POST   /api/v1/maintenance/work-orders/{id}/assign/       Assign work order
+POST   /api/v1/maintenance/work-orders/{id}/complete/     Complete work order
+GET    /api/v1/maintenance/costs/                         Cost ledger/reporting
+GET    /api/v1/maintenance/admin/summary/                 Maintenance ops summary
+```
+
+### Skills Service (via gateway: localhost:8081)
+
+```
+GET    /api/v1/skills/catalog/                            List learning content
+POST   /api/v1/skills/catalog/                            Create learning content
+GET    /api/v1/skills/catalog/{id}/                       Get content detail
+POST   /api/v1/skills/progress/                           Mark rider progress
+GET    /api/v1/skills/progress/{rider_id}/                Rider learning progress
+GET    /api/v1/skills/badges/                             List badges
+POST   /api/v1/skills/badges/award/                       Award badge
+GET    /api/v1/skills/admin/summary/                      Skills/training summary
+```
+
+### Support Service (via gateway: localhost:8081)
+
+```
+GET    /api/v1/support/tickets/                           List tickets
+POST   /api/v1/support/tickets/                           Create ticket
+GET    /api/v1/support/tickets/{id}/                      Get ticket detail
+POST   /api/v1/support/tickets/{id}/assign/               Assign ticket
+POST   /api/v1/support/tickets/{id}/resolve/              Resolve ticket
+POST   /api/v1/support/tickets/{id}/close/                Close ticket
+GET    /api/v1/support/categories/                        List support categories
+GET    /api/v1/support/admin/summary/                     Support ops summary
+```
+
 ---
 
 ## Rider Onboarding State Machine
@@ -220,6 +311,18 @@ docker exec yana_fleet python manage.py test tests --verbosity=2
 
 # Payments service
 docker exec yana_payments python manage.py test tests --verbosity=2
+
+# Marketplace service
+docker exec yana_marketplace python manage.py test tests --verbosity=2
+
+# Maintenance service
+docker exec yana_maintenance python manage.py test tests --verbosity=2
+
+# Skills service
+docker exec yana_skills python manage.py test tests --verbosity=2
+
+# Support service
+docker exec yana_support python manage.py test tests --verbosity=2
 ```
 
 ---
@@ -269,6 +372,7 @@ curl -X POST http://localhost:8081/api/v1/auth/rider/verify-otp \
 The cleanest cloud fallback for this repo is:
 - Railway for backend services
 - Railway or Netlify for the demo UI
+- Netlify or Vercel for the standalone admin dashboard
 
 Files included for that path:
 - `RAILWAY.md`
@@ -277,10 +381,11 @@ Files included for that path:
 - `api-gateway/demo/config.example.js`
 
 Recommended flow:
-1. Deploy `auth-service`, `rider-service`, `fleet-service`, `fleet-telemetry`, `payments-service`, and `api-gateway` on Railway.
+1. Deploy `auth-service`, `rider-service`, `fleet-service`, `fleet-telemetry`, `payments-service`, `marketplace-service`, `maintenance-service`, `skills-service`, `support-service`, and `api-gateway` on Railway.
 2. Set the gateway upstream env vars to the Railway service URLs.
 3. If you want a separate static client URL, deploy `api-gateway/demo` to Netlify.
 4. Point `api-gateway/demo/config.js` at the public Railway gateway URL.
+5. For the React admin dashboard, deploy `admin-dashboard` to Netlify or Vercel with `VITE_API_BASE_URL=https://<railway-gateway>/api/v1`.
 
 Client demo URL patterns:
 - Railway gateway: `https://<railway-gateway-url>/demo/index.html`
@@ -350,6 +455,3 @@ Set `OTP_SIMULATE=False` and configure your SMS gateway (Msg91/AWS SNS).
 - `fleet-service` — Vehicle CRUD, allotment engine, GPS telemetry
 - `payments-service` — Double-entry ledger, Razorpay integration, rent schedule
 - `marketplace-service` — Demand slots, rider matching, attendance
-- `maintenance-service` — Repair logs, cost tracking, alerts
-- `skills-service` — Videos, gamification, badges
-- `support-service` — Tickets, WhatsApp integration

@@ -238,12 +238,136 @@ services:
       - ./services/marketplace-service:/app
     command: celery -A marketplace_service.celery worker --loglevel=info --concurrency=4 -B
 
+  maintenance-service:
+    build:
+      context: ./services/maintenance-service
+      dockerfile: Dockerfile
+    container_name: yana_maintenance
+    profiles:
+      - optional
+    env_file:
+      - ./services/maintenance-service/.env
+    ports:
+      - "8006:8006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/maintenance-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8006"
+
+  maintenance-celery:
+    build:
+      context: ./services/maintenance-service
+      dockerfile: Dockerfile
+    container_name: yana_maintenance_celery
+    profiles:
+      - optional
+    env_file:
+      - ./services/maintenance-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/maintenance-service:/app
+    command: celery -A maintenance_service.celery worker --loglevel=info --concurrency=4 -B
+
+  skills-service:
+    build:
+      context: ./services/skills-service
+      dockerfile: Dockerfile
+    container_name: yana_skills
+    profiles:
+      - optional
+    env_file:
+      - ./services/skills-service/.env
+    ports:
+      - "8007:8007"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/skills-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8007"
+
+  skills-celery:
+    build:
+      context: ./services/skills-service
+      dockerfile: Dockerfile
+    container_name: yana_skills_celery
+    profiles:
+      - optional
+    env_file:
+      - ./services/skills-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/skills-service:/app
+    command: celery -A skills_service.celery worker --loglevel=info --concurrency=4 -B
+
+  support-service:
+    build:
+      context: ./services/support-service
+      dockerfile: Dockerfile
+    container_name: yana_support
+    profiles:
+      - optional
+    env_file:
+      - ./services/support-service/.env
+    ports:
+      - "8008:8008"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/support-service:/app
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8008"
+
+  support-celery:
+    build:
+      context: ./services/support-service
+      dockerfile: Dockerfile
+    container_name: yana_support_celery
+    profiles:
+      - optional
+    env_file:
+      - ./services/support-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./services/support-service:/app
+    command: celery -A support_service.celery worker --loglevel=info --concurrency=4 -B
+
   # ─── API Gateway (Nginx) ──────────────────────────────────────
   nginx:
     build:
       context: ./api-gateway
       dockerfile: Dockerfile
     container_name: yana_nginx
+    environment:
+      MAINTENANCE_SERVICE_HOST: ${MAINTENANCE_SERVICE_HOST:-127.0.0.1:65535}
+      SKILLS_SERVICE_HOST: ${SKILLS_SERVICE_HOST:-127.0.0.1:65534}
+      SUPPORT_SERVICE_HOST: ${SUPPORT_SERVICE_HOST:-127.0.0.1:65533}
     ports:
       - "8081:80"
     depends_on:
@@ -253,6 +377,18 @@ services:
       - fleet-telemetry
       - payments-service
       - marketplace-service
+
+  admin-dashboard:
+    build:
+      context: ./admin-dashboard
+      dockerfile: Dockerfile
+    container_name: yana_admin_dashboard
+    profiles:
+      - ui
+    ports:
+      - "3000:80"
+    depends_on:
+      - nginx
 
 volumes:
   postgres_data:
