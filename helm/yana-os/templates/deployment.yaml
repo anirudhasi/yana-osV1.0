@@ -1,0 +1,71 @@
+{{- range $svcKey, $svc := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc.name }}
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    {{- include "yana-os.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svc.name }}
+spec:
+  replicas: {{ $svc.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $svc.name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: {{ $svc.name }}
+        {{- include "yana-os.labels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $svc.name }}
+    spec:
+      serviceAccountName: {{ include "yana-os.serviceAccountName" $ }}
+      imagePullSecrets:
+        {{- range $.Values.global.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      containers:
+        - name: {{ $svc.name }}
+          image: {{ include "yana-os.image" (dict "svcName" $svc.name "context" $) }}
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $svc.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: yana-config
+          env:
+            {{- include "yana-os.commonEnv" $ | nindent 12 }}
+          resources:
+            requests:
+              cpu: {{ $svc.resources.requests.cpu | quote }}
+              memory: {{ $svc.resources.requests.memory | quote }}
+            limits:
+              cpu: {{ $svc.resources.limits.cpu | quote }}
+              memory: {{ $svc.resources.limits.memory | quote }}
+          {{- if $svc.probes }}
+          livenessProbe:
+            httpGet:
+              path: {{ $svc.probes.liveness.path }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $svc.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ $svc.probes.liveness.periodSeconds }}
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ $svc.probes.readiness.path }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $svc.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ $svc.probes.readiness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          {{- end }}
+      terminationGracePeriodSeconds: 30
+{{- end }}

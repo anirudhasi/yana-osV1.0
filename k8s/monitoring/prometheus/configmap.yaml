@@ -1,0 +1,273 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: yana-production
+        environment: production
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: []
+
+    rule_files:
+      - /etc/prometheus/alert_rules.yml
+
+    scrape_configs:
+      # Prometheus self-monitoring
+      - job_name: prometheus
+        static_configs:
+          - targets: ['localhost:9090']
+
+      # Yana application services
+      - job_name: auth-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['auth-service.yana-production.svc.cluster.local:8001']
+            labels:
+              service: auth-service
+              namespace: yana-production
+
+      - job_name: rider-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['rider-service.yana-production.svc.cluster.local:8002']
+            labels:
+              service: rider-service
+              namespace: yana-production
+
+      - job_name: fleet-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['fleet-service.yana-production.svc.cluster.local:8003']
+            labels:
+              service: fleet-service
+              namespace: yana-production
+
+      - job_name: fleet-telemetry
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['fleet-telemetry.yana-production.svc.cluster.local:8013']
+            labels:
+              service: fleet-telemetry
+              namespace: yana-production
+
+      - job_name: payments-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['payments-service.yana-production.svc.cluster.local:8004']
+            labels:
+              service: payments-service
+              namespace: yana-production
+
+      - job_name: marketplace-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['marketplace-service.yana-production.svc.cluster.local:8005']
+            labels:
+              service: marketplace-service
+              namespace: yana-production
+
+      - job_name: maintenance-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['maintenance-service.yana-production.svc.cluster.local:8006']
+            labels:
+              service: maintenance-service
+              namespace: yana-production
+
+      - job_name: skills-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['skills-service.yana-production.svc.cluster.local:8007']
+            labels:
+              service: skills-service
+              namespace: yana-production
+
+      - job_name: support-service
+        metrics_path: /metrics
+        scrape_interval: 15s
+        static_configs:
+          - targets: ['support-service.yana-production.svc.cluster.local:8008']
+            labels:
+              service: support-service
+              namespace: yana-production
+
+      # Kubernetes node metrics (via node-exporter)
+      - job_name: kubernetes-nodes
+        scheme: https
+        tls_config:
+          ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+          insecure_skip_verify: true
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+          - target_label: __address__
+            replacement: kubernetes.default.svc:443
+          - source_labels: [__meta_kubernetes_node_name]
+            regex: (.+)
+            target_label: __metrics_path__
+            replacement: /api/v1/nodes/$1/proxy/metrics
+
+      # Kubernetes pod metrics
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names:
+                - yana-production
+                - yana-staging
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            action: replace
+            target_label: kubernetes_pod_name
+
+      # Kubernetes service endpoints
+      - job_name: kubernetes-service-endpoints
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names:
+                - yana-production
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scheme]
+            action: replace
+            target_label: __scheme__
+            regex: (https?)
+          - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+            action: replace
+            target_label: __address__
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            action: replace
+            target_label: kubernetes_namespace
+          - source_labels: [__meta_kubernetes_service_name]
+            action: replace
+            target_label: kubernetes_name
+
+  alert_rules.yml: |
+    groups:
+      - name: yana_service_alerts
+        rules:
+          - alert: ServiceDown
+            expr: up{job=~".*-service|fleet-telemetry"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Service {{ $labels.service }} is down"
+              description: "{{ $labels.service }} has been down for more than 1 minute."
+
+          - alert: HighCPUUsage
+            expr: |
+              (sum(rate(container_cpu_usage_seconds_total{namespace="yana-production"}[5m])) by (pod)
+              /
+              sum(kube_pod_container_resource_limits{resource="cpu", namespace="yana-production"}) by (pod)) > 0.80
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High CPU usage on pod {{ $labels.pod }}"
+              description: "Pod {{ $labels.pod }} CPU usage is above 80% for 5 minutes."
+
+          - alert: HighMemoryUsage
+            expr: |
+              (sum(container_memory_working_set_bytes{namespace="yana-production"}) by (pod)
+              /
+              sum(kube_pod_container_resource_limits{resource="memory", namespace="yana-production"}) by (pod)) > 0.90
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High memory usage on pod {{ $labels.pod }}"
+              description: "Pod {{ $labels.pod }} memory usage is above 90% for 5 minutes."
+
+          - alert: HighErrorRate
+            expr: |
+              (sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m])) by (service)
+              /
+              sum(rate(django_http_responses_total_by_status_total[5m])) by (service)) > 0.01
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "High 5xx error rate on {{ $labels.service }}"
+              description: "Service {{ $labels.service }} has 5xx error rate above 1% for 2 minutes."
+
+          - alert: SlowResponseTime
+            expr: |
+              histogram_quantile(0.95, sum(rate(django_http_requests_latency_seconds_bucket[5m])) by (le, service)) > 2
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Slow P95 response time on {{ $labels.service }}"
+              description: "Service {{ $labels.service }} P95 latency is above 2s for 5 minutes."
+
+          - alert: PodCrashLooping
+            expr: kube_pod_container_status_restarts_total{namespace="yana-production"} > 5
+            for: 5m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod {{ $labels.pod }} is crash looping"
+              description: "Pod {{ $labels.pod }} has restarted more than 5 times."
+
+          - alert: DeploymentReplicasMismatch
+            expr: |
+              kube_deployment_spec_replicas{namespace="yana-production"}
+              != kube_deployment_status_available_replicas{namespace="yana-production"}
+            for: 10m
+            labels:
+              severity: warning
+            annotations:
+              summary: "Deployment {{ $labels.deployment }} replica mismatch"
+              description: "Deployment {{ $labels.deployment }} has mismatched replicas for 10 minutes."

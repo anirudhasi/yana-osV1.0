@@ -1,0 +1,47 @@
+## Staging environment overrides
+global:
+  namespace: yana-staging
+  imageTag: latest
+
+services:
+  auth:
+    replicas: 1
+  rider:
+    replicas: 1
+  fleet:
+    replicas: 1
+  fleetTelemetry:
+    replicas: 1
+  payments:
+    replicas: 1
+  marketplace:
+    replicas: 1
+  maintenance:
+    replicas: 1
+  skills:
+    replicas: 1
+  support:
+    replicas: 1
+  apiGateway:
+    replicas: 1
+
+hpa:
+  minReplicas: 1
+  maxReplicas: 3
+
+ingress:
+  host: api-staging.yana.in
+  tlsSecretName: yana-tls-staging
+
+config:
+  debug: "True"
+  allowedHosts: "api-staging.yana.in,localhost"
+  logLevel: DEBUG
+  otpSimulate: "True"
+
+monitoring:
+  prometheus:
+    retention: 7d
+    storageSize: 20Gi
+  grafana:
+    domain: grafana-staging.yana.in

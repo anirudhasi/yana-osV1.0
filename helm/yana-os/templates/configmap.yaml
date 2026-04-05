@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: yana-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "yana-os.labels" . | nindent 4 }}
+    app.kubernetes.io/component: config
+data:
+  POSTGRES_DB: {{ .Values.config.postgresDb | quote }}
+  POSTGRES_HOST: {{ .Values.config.postgresHost | quote }}
+  POSTGRES_PORT: {{ .Values.config.postgresPort | quote }}
+  REDIS_HOST: {{ .Values.config.redisHost | quote }}
+  REDIS_PORT: {{ .Values.config.redisPort | quote }}
+  MINIO_HOST: {{ .Values.config.minioHost | quote }}
+  MINIO_PORT: {{ .Values.config.minioPort | quote }}
+  CELERY_BROKER_URL: {{ printf "redis://%s:%s/0" .Values.config.redisHost .Values.config.redisPort | quote }}
+  CELERY_RESULT_BACKEND: {{ printf "redis://%s:%s/1" .Values.config.redisHost .Values.config.redisPort | quote }}
+  DJANGO_SETTINGS_MODULE: config.settings
+  DEBUG: {{ .Values.config.debug | quote }}
+  ALLOWED_HOSTS: {{ .Values.config.allowedHosts | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  OTP_SIMULATE: {{ .Values.config.otpSimulate | quote }}
+  {{- range $svcKey, $svc := .Values.services }}
+  {{ $svc.name | upper | replace "-" "_" }}_URL: {{ printf "http://%s:%d" $svc.name (int $svc.port) | quote }}
+  {{- end }}

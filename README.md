@@ -332,6 +332,141 @@ Set `OTP_SIMULATE=False` and configure your SMS gateway (Msg91/AWS SNS).
 
 ---
 
+## DevOps & Kubernetes
+
+### CI/CD Pipeline Overview
+
+**CI (`.github/workflows/ci.yml`)** — triggered on every push and pull request:
+
+1. `lint-and-test` — runs in parallel across all 10 services (matrix strategy). For each service:
+   - Builds the Docker image with layer caching (`actions/cache`)
+   - Runs the test suite inside the container (`python manage.py test tests --verbosity=2` for Django, `pytest` for FastAPI)
+2. `build-and-push` — runs only on `main` branch merges, after tests pass:
+   - Logs into GitHub Container Registry (`ghcr.io/yana-os`) using `GITHUB_TOKEN`
+   - Builds and pushes each service image tagged as both `ghcr.io/yana-os/<service>:<git-sha>` and `:latest`
+   - Includes `admin-dashboard` and `api-gateway` images
+
+**CD (`.github/workflows/cd.yml`)** — triggered when CI completes successfully on `main`:
+
+1. `deploy-staging` — automatically:
+   - Pulls kubeconfig from `KUBE_CONFIG_STAGING` secret
+   - Updates all deployment images with the new SHA via `kubectl set image`
+   - Waits for every rollout with `kubectl rollout status --timeout=300s`
+   - Posts a summary to the GitHub Actions step summary
+2. `deploy-production` — requires manual approval via the `production` environment:
+   - Same rollout process targeting `yana-production` namespace
+   - Runs smoke tests (curl `GET /health/` for each service) after deploy
+
+### Deploying to Kubernetes with kubectl
+
+**Prerequisites:** `kubectl` configured for your cluster, secrets created (see below).
+
+```bash
+# 1. Create namespaces
+kubectl apply -f k8s/namespace.yaml
+
+# 2. Create secrets (fill in real values)
+kubectl create secret generic yana-secrets \
+  --from-literal=POSTGRES_PASSWORD=<your-pg-password> \
+  --from-literal=POSTGRES_USER=yana \
+  --from-literal=DJANGO_SECRET_KEY=<your-django-secret> \
+  --from-literal=JWT_SECRET_KEY=<your-jwt-secret> \
+  --from-literal=PII_ENCRYPTION_KEY=<your-pii-key> \
+  --from-literal=MINIO_ACCESS_KEY=<minio-access-key> \
+  --from-literal=MINIO_SECRET_KEY=<minio-secret-key> \
+  --from-literal=RAZORPAY_KEY_ID=<razorpay-key-id> \
+  --from-literal=RAZORPAY_KEY_SECRET=<razorpay-key-secret> \
+  -n yana-production
+
+# 3. Create GHCR pull secret
+kubectl create secret docker-registry ghcr-pull-secret \
+  --docker-server=ghcr.io \
+  --docker-username=<github-username> \
+  --docker-password=<github-pat> \
+  -n yana-production
+
+# 4. Apply RBAC, ConfigMap
+kubectl apply -f k8s/rbac.yaml
+kubectl apply -f k8s/configmap.yaml
+
+# 5. Deploy all services
+kubectl apply -f k8s/services/auth-service/
+kubectl apply -f k8s/services/rider-service/
+kubectl apply -f k8s/services/fleet-service/
+kubectl apply -f k8s/services/fleet-telemetry/
+kubectl apply -f k8s/services/payments-service/
+kubectl apply -f k8s/services/marketplace-service/
+kubectl apply -f k8s/services/maintenance-service/
+kubectl apply -f k8s/services/skills-service/
+kubectl apply -f k8s/services/support-service/
+kubectl apply -f k8s/services/api-gateway/
+
+# 6. Deploy Celery workers
+kubectl apply -f k8s/celery/
+
+# 7. Apply Ingress
+kubectl apply -f k8s/ingress.yaml
+
+# 8. Deploy monitoring
+kubectl apply -f k8s/monitoring/prometheus/
+kubectl apply -f k8s/monitoring/grafana/
+
+# Update image tags after a new build
+kubectl set image deployment/auth-service auth-service=ghcr.io/yana-os/auth-service:<sha> -n yana-production
+kubectl rollout status deployment/auth-service -n yana-production
+```
+
+### Installing with Helm
+
+```bash
+# Install to staging
+helm upgrade --install yana-os helm/yana-os \
+  -f helm/yana-os/values-staging.yaml \
+  --namespace yana-staging \
+  --create-namespace \
+  --set global.imageTag=<git-sha>
+
+# Install to production
+helm upgrade --install yana-os helm/yana-os \
+  -f helm/yana-os/values-production.yaml \
+  --namespace yana-production \
+  --create-namespace \
+  --set global.imageTag=<git-sha>
+
+# Check release status
+helm status yana-os -n yana-production
+
+# Roll back to previous release
+helm rollback yana-os -n yana-production
+```
+
+### Accessing Prometheus and Grafana
+
+**Port-forward locally:**
+
+```bash
+# Prometheus (http://localhost:9090)
+kubectl port-forward svc/prometheus 9090:9090 -n monitoring
+
+# Grafana (http://localhost:3000)
+kubectl port-forward svc/grafana 3000:3000 -n monitoring
+# Default login: admin / <grafana-admin-password from grafana-secrets>
+```
+
+**Via Ingress (after DNS setup):**
+- Prometheus: internal only (no public ingress by default — access via port-forward)
+- Grafana: `https://grafana.yana.in` (configure a separate Ingress if needed)
+
+**Importing the Yana OS dashboard:**
+1. Open Grafana → Dashboards → Import
+2. Upload `k8s/monitoring/grafana/dashboards/yana-overview-dashboard.json`
+3. Select the `Prometheus` data source
+4. Click Import
+
+The dashboard includes: Service Health overview, Request Rate, Error Rate (5xx/4xx), Response Time P95, CPU/Memory by pod, Active Riders gauge, and Wallet Transactions per minute.
+
+---
+
 ## Production Checklist
 
 - [ ] Change all default passwords and secrets in `.env`

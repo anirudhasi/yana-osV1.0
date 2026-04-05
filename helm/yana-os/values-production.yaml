@@ -1,0 +1,49 @@
+## Production environment overrides
+global:
+  namespace: yana-production
+  # imageTag is set by CD pipeline to the specific git SHA
+
+services:
+  auth:
+    replicas: 2
+  rider:
+    replicas: 3
+  fleet:
+    replicas: 2
+  fleetTelemetry:
+    replicas: 3
+  payments:
+    replicas: 3
+  marketplace:
+    replicas: 2
+  maintenance:
+    replicas: 2
+  skills:
+    replicas: 2
+  support:
+    replicas: 2
+  apiGateway:
+    replicas: 3
+
+hpa:
+  minReplicas: 2
+  maxReplicas: 10
+  cpuTargetUtilization: 70
+  memoryTargetValue: 400Mi
+
+ingress:
+  host: api.yana.in
+  tlsSecretName: yana-tls-production
+
+config:
+  debug: "False"
+  allowedHosts: "api.yana.in"
+  logLevel: INFO
+  otpSimulate: "False"
+
+monitoring:
+  prometheus:
+    retention: 15d
+    storageSize: 50Gi
+  grafana:
+    domain: grafana.yana.in

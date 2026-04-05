@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-service
+  namespace: yana-production
+  labels:
+    app.kubernetes.io/name: yana-os
+    app.kubernetes.io/component: support-service
+spec:
+  selector:
+    app: support-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8008
+      targetPort: 8008
+  type: ClusterIP

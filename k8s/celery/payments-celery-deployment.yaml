@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-celery-worker
+  namespace: yana-production
+  labels:
+    app.kubernetes.io/name: yana-os
+    app.kubernetes.io/component: payments-celery-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payments-celery-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: payments-celery-worker
+        app.kubernetes.io/name: yana-os
+        app.kubernetes.io/component: payments-celery-worker
+    spec:
+      serviceAccountName: yana-deployer
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: payments-celery-worker
+          image: ghcr.io/yana-os/payments-service:latest
+          imagePullPolicy: Always
+          command: ["celery", "-A", "config", "worker", "--loglevel=info", "--concurrency=4", "-Q", "payments"]
+          envFrom:
+            - configMapRef:
+                name: yana-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: POSTGRES_USER
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: JWT_SECRET_KEY
+            - name: PII_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: PII_ENCRYPTION_KEY
+            - name: RAZORPAY_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: RAZORPAY_KEY_ID
+            - name: RAZORPAY_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: RAZORPAY_KEY_SECRET
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+      terminationGracePeriodSeconds: 60

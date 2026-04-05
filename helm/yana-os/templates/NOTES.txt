@@ -1,0 +1,44 @@
+Yana OS has been deployed successfully!
+
+Release:   {{ .Release.Name }}
+Namespace: {{ .Values.global.namespace }}
+Chart:     {{ .Chart.Name }}-{{ .Chart.Version }}
+Image Tag: {{ .Values.global.imageTag }}
+
+Services deployed:
+{{- range $svcKey, $svc := .Values.services }}
+  - {{ $svc.name }} (port {{ $svc.port }}){{ if $svc.celery }} + celery worker{{ end }}
+{{- end }}
+
+{{- if .Values.ingress.enabled }}
+
+Ingress endpoint:
+  https://{{ .Values.ingress.host }}/
+
+API endpoints:
+  Auth:        https://{{ .Values.ingress.host }}/api/v1/auth/
+  Riders:      https://{{ .Values.ingress.host }}/api/v1/riders/
+  Fleet:       https://{{ .Values.ingress.host }}/api/v1/fleet/
+  Telemetry:   https://{{ .Values.ingress.host }}/telemetry/
+  Payments:    https://{{ .Values.ingress.host }}/api/v1/payments/
+  Marketplace: https://{{ .Values.ingress.host }}/api/v1/marketplace/
+  Maintenance: https://{{ .Values.ingress.host }}/api/v1/maintenance/
+  Skills:      https://{{ .Values.ingress.host }}/api/v1/skills/
+  Support:     https://{{ .Values.ingress.host }}/api/v1/support/
+{{- end }}
+
+To check rollout status:
+  kubectl rollout status deployment --namespace {{ .Values.global.namespace }}
+
+To port-forward Grafana (if monitoring enabled):
+  kubectl port-forward svc/grafana 3000:3000 -n monitoring
+
+To port-forward Prometheus:
+  kubectl port-forward svc/prometheus 9090:9090 -n monitoring
+
+To view logs for a service:
+  kubectl logs -l app=auth-service -n {{ .Values.global.namespace }} --tail=100 -f
+
+To upgrade the release:
+  helm upgrade {{ .Release.Name }} helm/yana-os -f helm/yana-os/values-production.yaml \
+    --set global.imageTag=<new-sha>

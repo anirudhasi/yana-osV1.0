@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: marketplace-service
+  namespace: yana-production
+  labels:
+    app.kubernetes.io/name: yana-os
+    app.kubernetes.io/component: marketplace-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: marketplace-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: marketplace-service
+        app.kubernetes.io/name: yana-os
+        app.kubernetes.io/component: marketplace-service
+    spec:
+      serviceAccountName: yana-deployer
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: marketplace-service
+          image: ghcr.io/yana-os/marketplace-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8005
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: yana-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: POSTGRES_USER
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: JWT_SECRET_KEY
+            - name: PII_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: PII_ENCRYPTION_KEY
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8005
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8005
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      terminationGracePeriodSeconds: 30
