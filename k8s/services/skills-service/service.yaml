@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: skills-service
+  namespace: yana-production
+  labels:
+    app.kubernetes.io/name: yana-os
+    app.kubernetes.io/component: skills-service
+spec:
+  selector:
+    app: skills-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8007
+      targetPort: 8007
+  type: ClusterIP

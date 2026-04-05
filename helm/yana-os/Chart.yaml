@@ -1,0 +1,17 @@
+apiVersion: v2
+name: yana-os
+description: Yana OS rider platform Helm chart
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - yana
+  - rider
+  - fleet
+  - marketplace
+  - django
+  - fastapi
+home: https://github.com/yana-os/yana-os
+maintainers:
+  - name: Yana OS Team
+    email: devops@yana.in

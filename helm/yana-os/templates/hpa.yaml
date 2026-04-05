@@ -1,0 +1,31 @@
+{{- range $svcKey, $svc := .Values.services }}
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ $svc.name }}-hpa
+  namespace: {{ $.Values.global.namespace }}
+  labels:
+    {{- include "yana-os.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $svc.name }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ $svc.name }}
+  minReplicas: {{ $.Values.hpa.minReplicas }}
+  maxReplicas: {{ $.Values.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $.Values.hpa.cpuTargetUtilization }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: AverageValue
+          averageValue: {{ $.Values.hpa.memoryTargetValue }}
+{{- end }}

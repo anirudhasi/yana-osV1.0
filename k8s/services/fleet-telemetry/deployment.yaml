@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fleet-telemetry
+  namespace: yana-production
+  labels:
+    app.kubernetes.io/name: yana-os
+    app.kubernetes.io/component: fleet-telemetry
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fleet-telemetry
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: fleet-telemetry
+        app.kubernetes.io/name: yana-os
+        app.kubernetes.io/component: fleet-telemetry
+    spec:
+      serviceAccountName: yana-deployer
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: fleet-telemetry
+          image: ghcr.io/yana-os/fleet-telemetry:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8013
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: yana-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: yana-secrets
+                  key: JWT_SECRET_KEY
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8013
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8013
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+      terminationGracePeriodSeconds: 30

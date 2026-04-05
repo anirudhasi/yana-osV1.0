@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rider-service
+  namespace: yana-production
+  labels:
+    app.kubernetes.io/name: yana-os
+    app.kubernetes.io/component: rider-service
+spec:
+  selector:
+    app: rider-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP

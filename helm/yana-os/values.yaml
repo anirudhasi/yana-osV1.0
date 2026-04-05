@@ -1,0 +1,292 @@
+## Yana OS Helm Chart — Default Values
+## Override with values-staging.yaml or values-production.yaml
+
+global:
+  registry: ghcr.io/yana-os
+  imageTag: latest
+  imagePullPolicy: Always
+  namespace: yana-production
+  imagePullSecrets:
+    - name: ghcr-pull-secret
+
+## Service definitions — each entry drives a Deployment + Service + HPA
+services:
+  auth:
+    name: auth-service
+    port: 8001
+    replicas: 2
+    celery: false
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  rider:
+    name: rider-service
+    port: 8002
+    replicas: 2
+    celery: true
+    celeryQueue: rider
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  fleet:
+    name: fleet-service
+    port: 8003
+    replicas: 2
+    celery: true
+    celeryQueue: fleet
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  fleetTelemetry:
+    name: fleet-telemetry
+    port: 8013
+    replicas: 2
+    celery: false
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  payments:
+    name: payments-service
+    port: 8004
+    replicas: 2
+    celery: true
+    celeryQueue: payments
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  marketplace:
+    name: marketplace-service
+    port: 8005
+    replicas: 2
+    celery: true
+    celeryQueue: marketplace
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  maintenance:
+    name: maintenance-service
+    port: 8006
+    replicas: 2
+    celery: true
+    celeryQueue: maintenance
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  skills:
+    name: skills-service
+    port: 8007
+    replicas: 2
+    celery: true
+    celeryQueue: skills
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  support:
+    name: support-service
+    port: 8008
+    replicas: 2
+    celery: true
+    celeryQueue: support
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 30
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 10
+
+  apiGateway:
+    name: api-gateway
+    port: 8081
+    replicas: 2
+    celery: false
+    serviceType: LoadBalancer
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        path: /health/
+        initialDelaySeconds: 15
+        periodSeconds: 30
+      readiness:
+        path: /health/
+        initialDelaySeconds: 10
+        periodSeconds: 10
+
+## HPA defaults (applied to all services)
+hpa:
+  minReplicas: 2
+  maxReplicas: 10
+  cpuTargetUtilization: 70
+  memoryTargetValue: 400Mi
+
+## Ingress configuration
+ingress:
+  enabled: true
+  className: nginx
+  host: api.yana.in
+  tls: true
+  tlsSecretName: yana-tls-production
+  clusterIssuer: letsencrypt-prod
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+## ConfigMap values (non-secret)
+config:
+  postgresDb: yana_db
+  postgresHost: postgres
+  postgresPort: "5432"
+  redisHost: redis
+  redisPort: "6379"
+  minioHost: minio
+  minioPort: "9000"
+  debug: "False"
+  allowedHosts: "api.yana.in,localhost"
+  logLevel: INFO
+  otpSimulate: "False"
+
+## Monitoring
+monitoring:
+  prometheus:
+    enabled: true
+    retention: 15d
+    storageSize: 50Gi
+  grafana:
+    enabled: true
+    adminPassword: changeme
+    storageSize: 10Gi
+    domain: grafana.yana.in
+
+## Service account
+serviceAccount:
+  create: true
+  name: yana-deployer
