@@ -25,7 +25,7 @@ FOR %%P IN (
 ) DO (
   IF EXIST %%P (
     echo  Using Google Chrome to generate PDF...
-    %%P --headless --disable-gpu --print-to-pdf="%PDF_FILE%" --no-pdf-header-footer --print-to-pdf-no-header "%HTML_FILE%"
+    %%P --headless=new --disable-gpu --no-sandbox --print-to-pdf="%PDF_FILE%" --no-pdf-header-footer "%HTML_FILE%"
     IF EXIST "%PDF_FILE%" (
       echo  ✓ PDF saved to: %PDF_FILE%
       goto :DONE
@@ -40,7 +40,7 @@ FOR %%P IN (
 ) DO (
   IF EXIST %%P (
     echo  Using Microsoft Edge to generate PDF...
-    %%P --headless --disable-gpu --print-to-pdf="%PDF_FILE%" --no-pdf-header-footer "%HTML_FILE%"
+    %%P --headless=new --disable-gpu --no-sandbox --print-to-pdf="%PDF_FILE%" --no-pdf-header-footer "%HTML_FILE%"
     IF EXIST "%PDF_FILE%" (
       echo  ✓ PDF saved to: %PDF_FILE%
       goto :DONE
