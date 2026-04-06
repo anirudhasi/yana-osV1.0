@@ -1,0 +1,2813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yana OS — Complete Product & Technical Documentation</title>
+<style>
+/* ═══════════════════════════════════════════════
+   GLOBAL RESET & TYPOGRAPHY
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --navy:   #0f2044;
+  --blue:   #1d4ed8;
+  --accent: #3b82f6;
+  --teal:   #0891b2;
+  --green:  #059669;
+  --amber:  #d97706;
+  --red:    #dc2626;
+  --gray-50:#f8fafc;
+  --gray-100:#f1f5f9;
+  --gray-200:#e2e8f0;
+  --gray-300:#cbd5e1;
+  --gray-500:#64748b;
+  --gray-700:#334155;
+  --gray-900:#0f172a;
+  --font: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --mono: 'Consolas', 'Courier New', monospace;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--gray-900);
+  background: #fff;
+}
+
+/* ═══════════════════════════════════════════════
+   PRINT STYLES
+═══════════════════════════════════════════════ */
+@media print {
+  nav, .no-print { display: none !important; }
+  body { font-size: 11px; }
+  .page-break { page-break-before: always; }
+  .cover { page-break-after: always; }
+  h2 { page-break-before: always; }
+  h2:first-of-type { page-break-before: avoid; }
+  a { color: inherit; text-decoration: none; }
+  .api-block, .code-block { background: #f8f8f8 !important; border: 1px solid #ccc; }
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR NAV
+═══════════════════════════════════════════════ */
+nav {
+  position: fixed;
+  top: 0; left: 0;
+  width: 260px;
+  height: 100vh;
+  background: var(--navy);
+  overflow-y: auto;
+  z-index: 1000;
+  padding: 0 0 32px;
+}
+nav .nav-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 8px;
+}
+nav .nav-logo span {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+nav .nav-logo .version {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  display: block;
+  margin-top: 2px;
+}
+nav ul { list-style: none; padding: 0 12px; }
+nav ul li a {
+  display: block;
+  padding: 7px 12px;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  font-size: 12.5px;
+  border-radius: 6px;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+nav ul li a:hover { background: rgba(255,255,255,0.1); color: #fff; }
+nav ul li a.section-header {
+  color: rgba(255,255,255,0.4);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 12px 4px;
+  cursor: default;
+}
+nav ul li a.section-header:hover { background: none; }
+nav ul li a.sub { padding-left: 24px; font-size: 12px; }
+
+/* ═══════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════ */
+main {
+  margin-left: 260px;
+  padding: 0;
+  max-width: 960px;
+}
+
+/* ═══════════════════════════════════════════════
+   COVER PAGE
+═══════════════════════════════════════════════ */
+.cover {
+  background: linear-gradient(135deg, var(--navy) 0%, #1e3a6e 60%, var(--blue) 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 80px 64px;
+  position: relative;
+  overflow: hidden;
+}
+.cover::before {
+  content:'';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.cover::after {
+  content:'';
+  position: absolute;
+  bottom: -80px; left: 30%;
+  width: 350px; height: 350px;
+  background: radial-gradient(circle, rgba(8,145,178,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.cover-badge {
+  display: inline-block;
+  background: rgba(59,130,246,0.25);
+  border: 1px solid rgba(59,130,246,0.5);
+  color: #93c5fd;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+.cover h1 {
+  font-size: 56px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 8px;
+}
+.cover h1 span { color: #60a5fa; }
+.cover .tagline {
+  font-size: 20px;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 48px;
+  font-weight: 400;
+  max-width: 520px;
+}
+.cover-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 560px;
+}
+.cover-meta-item label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  display: block;
+  margin-bottom: 4px;
+}
+.cover-meta-item span {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+.cover-divider {
+  width: 64px;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #0891b2);
+  border-radius: 2px;
+  margin: 32px 0;
+}
+.cover-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 48px;
+}
+.cover-services span {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+}
+
+/* ═══════════════════════════════════════════════
+   SECTION HEADINGS
+═══════════════════════════════════════════════ */
+.section-wrap { padding: 64px 64px 40px; border-bottom: 1px solid var(--gray-200); }
+.section-wrap:last-child { border-bottom: none; }
+
+h2 {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -1px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.h2-sub {
+  font-size: 15px;
+  color: var(--gray-500);
+  margin-bottom: 36px;
+  line-height: 1.5;
+}
+h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 36px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--gray-200);
+}
+h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin: 24px 0 8px;
+}
+h5 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 0 6px;
+}
+p { margin-bottom: 14px; color: var(--gray-700); font-size: 14px; }
+ul, ol { padding-left: 20px; margin-bottom: 14px; }
+li { color: var(--gray-700); font-size: 14px; margin-bottom: 4px; }
+
+/* ═══════════════════════════════════════════════
+   SECTION LABEL PILL
+═══════════════════════════════════════════════ */
+.section-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: var(--blue);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+/* ═══════════════════════════════════════════════
+   CALLOUT BOXES
+═══════════════════════════════════════════════ */
+.callout {
+  border-left: 4px solid;
+  padding: 14px 18px;
+  border-radius: 0 8px 8px 0;
+  margin: 20px 0;
+  font-size: 13.5px;
+}
+.callout.info  { border-color: var(--accent); background: #eff6ff; color: #1e40af; }
+.callout.tip   { border-color: var(--green);  background: #f0fdf4; color: #065f46; }
+.callout.warn  { border-color: var(--amber);  background: #fffbeb; color: #92400e; }
+.callout.note  { border-color: var(--gray-300); background: var(--gray-50); color: var(--gray-700); }
+.callout strong { display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ═══════════════════════════════════════════════
+   TABLES
+═══════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; margin: 20px 0; border-radius: 10px; border: 1px solid var(--gray-200); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--gray-900);
+  color: #fff;
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+thead th:first-child { border-radius: 9px 0 0 0; }
+thead th:last-child  { border-radius: 0 9px 0 0; }
+tbody tr { border-bottom: 1px solid var(--gray-100); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:nth-child(even) { background: var(--gray-50); }
+tbody td { padding: 9px 14px; vertical-align: top; }
+tbody td:first-child { font-weight: 600; color: var(--gray-900); font-family: var(--mono); font-size: 12px; }
+
+/* ═══════════════════════════════════════════════
+   CODE BLOCKS
+═══════════════════════════════════════════════ */
+.code-block {
+  background: #0f172a;
+  border-radius: 10px;
+  padding: 20px 22px;
+  margin: 16px 0;
+  overflow-x: auto;
+  position: relative;
+}
+.code-block .lang-tag {
+  position: absolute;
+  top: 10px; right: 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+.code-block pre {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  white-space: pre;
+}
+.code-block .kw  { color: #c084fc; }
+.code-block .str { color: #86efac; }
+.code-block .cmt { color: #64748b; font-style: italic; }
+.code-block .num { color: #fbbf24; }
+.code-block .key { color: #60a5fa; }
+
+.api-block {
+  background: #f8fafc;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin: 16px 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.api-block .method {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+}
+.m-get  { background:#dbeafe; color:#1e40af; }
+.m-post { background:#d1fae5; color:#065f46; }
+.m-put, .m-patch { background:#fef3c7; color:#92400e; }
+.m-del  { background:#fee2e2; color:#991b1b; }
+
+/* ═══════════════════════════════════════════════
+   FEATURE TILES (screenshots replacement)
+═══════════════════════════════════════════════ */
+.ui-mockup {
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 20px 0;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+}
+.ui-mockup .ui-titlebar {
+  background: var(--navy);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ui-mockup .ui-dot { width: 10px; height: 10px; border-radius: 50%; }
+.ui-mockup .ui-dot.r { background: #ef4444; }
+.ui-mockup .ui-dot.y { background: #f59e0b; }
+.ui-mockup .ui-dot.g { background: #22c55e; }
+.ui-mockup .ui-titlebar .ui-url {
+  margin-left: 8px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  font-family: var(--mono);
+}
+.ui-mockup .ui-body { padding: 0; }
+
+/* Stat tile grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 16px;
+  background: var(--gray-50);
+}
+.stat-tile {
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.stat-tile .st-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
+.stat-tile .st-value { font-size: 26px; font-weight: 800; color: var(--navy); margin: 2px 0; }
+.stat-tile .st-sub   { font-size: 11px; color: var(--gray-500); }
+.stat-tile .st-trend-up   { color: var(--green); font-size: 11px; font-weight: 600; }
+.stat-tile .st-trend-down { color: var(--red);   font-size: 11px; font-weight: 600; }
+.stat-tile.blue  { border-top: 3px solid var(--blue); }
+.stat-tile.green { border-top: 3px solid var(--green); }
+.stat-tile.amber { border-top: 3px solid var(--amber); }
+.stat-tile.teal  { border-top: 3px solid var(--teal); }
+.stat-tile.red   { border-top: 3px solid var(--red); }
+
+/* ═══════════════════════════════════════════════
+   WORKFLOW DIAGRAMS
+═══════════════════════════════════════════════ */
+.workflow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 24px 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.wf-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 110px;
+  position: relative;
+}
+.wf-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -8px;
+  top: 22px;
+  font-size: 18px;
+  color: var(--gray-300);
+  z-index: 1;
+}
+.wf-circle {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+  background: var(--blue);
+  box-shadow: 0 4px 12px rgba(29,78,216,0.3);
+  flex-shrink: 0;
+}
+.wf-circle.done  { background: var(--green); box-shadow: 0 4px 12px rgba(5,150,105,0.3); }
+.wf-circle.warn  { background: var(--amber); box-shadow: 0 4px 12px rgba(217,119,6,0.3); }
+.wf-circle.admin { background: var(--teal);  box-shadow: 0 4px 12px rgba(8,145,178,0.3); }
+.wf-label { font-size: 11px; font-weight: 600; color: var(--gray-700); text-align: center; line-height: 1.3; }
+.wf-sub   { font-size: 10px; color: var(--gray-500); text-align: center; margin-top: 2px; }
+
+/* Vertical workflow */
+.vworkflow { margin: 24px 0; }
+.vwf-item {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 0;
+  position: relative;
+}
+.vwf-item:not(:last-child) .vwf-line::after {
+  content: '';
+  position: absolute;
+  left: 19px;
+  top: 40px;
+  bottom: 0;
+  width: 2px;
+  background: var(--gray-200);
+}
+.vwf-left { display: flex; flex-direction: column; align-items: center; }
+.vwf-circle {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.vwf-circle.admin { background: var(--teal); }
+.vwf-circle.auto  { background: var(--amber); }
+.vwf-circle.done  { background: var(--green); }
+.vwf-line {
+  width: 2px;
+  flex: 1;
+  background: var(--gray-200);
+  margin: 4px 0;
+  min-height: 32px;
+}
+.vwf-content {
+  flex: 1;
+  padding: 8px 0 28px;
+}
+.vwf-content h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 6px 0 4px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.vwf-content p { font-size: 13px; color: var(--gray-500); margin: 0; }
+.vwf-badge {
+  display: inline-block;
+  background: var(--gray-100);
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+.vwf-badge.admin { background: #e0f2fe; color: var(--teal); }
+.vwf-badge.auto  { background: #fef3c7; color: var(--amber); }
+.vwf-badge.rider { background: #eff6ff; color: var(--blue); }
+
+/* ═══════════════════════════════════════════════
+   ARCHITECTURE DIAGRAM
+═══════════════════════════════════════════════ */
+.arch-diagram {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 32px 28px;
+  margin: 24px 0;
+}
+.arch-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.arch-box {
+  border: 1.5px solid;
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 90px;
+  position: relative;
+}
+.arch-box .arch-port {
+  font-size: 9px;
+  font-weight: 400;
+  opacity: 0.65;
+  display: block;
+  margin-top: 2px;
+  font-family: var(--mono);
+}
+.ab-navy  { border-color: var(--navy);  background: #e8eef8; color: var(--navy); }
+.ab-blue  { border-color: var(--blue);  background: #eff6ff; color: var(--blue); }
+.ab-teal  { border-color: var(--teal);  background: #e0f2fe; color: var(--teal); }
+.ab-green { border-color: var(--green); background: #f0fdf4; color: #065f46; }
+.ab-amber { border-color: var(--amber); background: #fffbeb; color: #92400e; }
+.ab-red   { border-color: var(--red);   background: #fef2f2; color: var(--red); }
+.ab-gray  { border-color: var(--gray-300); background: #fff; color: var(--gray-700); }
+
+.arch-arrow-row {
+  display: flex;
+  justify-content: center;
+  color: var(--gray-300);
+  font-size: 20px;
+  margin: 4px 0;
+  gap: 56px;
+}
+.arch-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════════════
+   BADGE / STATUS PILL
+═══════════════════════════════════════════════ */
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge.blue   { background: #dbeafe; color: #1e40af; }
+.badge.green  { background: #d1fae5; color: #065f46; }
+.badge.amber  { background: #fef3c7; color: #92400e; }
+.badge.red    { background: #fee2e2; color: #991b1b; }
+.badge.gray   { background: var(--gray-100); color: var(--gray-700); }
+.badge.purple { background: #f3e8ff; color: #6b21a8; }
+.badge.teal   { background: #e0f2fe; color: #0369a1; }
+
+/* ═══════════════════════════════════════════════
+   FEATURE LIST
+═══════════════════════════════════════════════ */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+.feature-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 18px 18px;
+  background: #fff;
+}
+.feature-card .fc-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.feature-card h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 6px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.feature-card p {
+  font-size: 12.5px;
+  color: var(--gray-500);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE PHONE MOCKUP
+═══════════════════════════════════════════════ */
+.phone-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 24px 0;
+}
+.phone-mockup {
+  width: 200px;
+  border: 3px solid var(--gray-900);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+  background: #fff;
+}
+.phone-notch {
+  background: var(--gray-900);
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.phone-notch span {
+  width: 60px;
+  height: 10px;
+  background: #1f2937;
+  border-radius: 10px;
+  border: 1px solid #374151;
+}
+.phone-screen { padding: 0; }
+.phone-header {
+  background: var(--navy);
+  padding: 12px 14px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.phone-body {
+  padding: 10px 12px;
+  min-height: 260px;
+}
+.phone-nav {
+  background: #f8fafc;
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 4px;
+}
+.phone-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.phone-nav-item .pni-icon { font-size: 16px; }
+.phone-nav-item .pni-label { font-size: 8px; color: var(--gray-500); }
+.phone-nav-item.active .pni-label { color: var(--blue); }
+.phone-nav-item.active .pni-icon { filter: none; }
+
+.phone-input {
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--gray-500);
+  margin-bottom: 8px;
+  width: 100%;
+}
+.phone-btn {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  width: 100%;
+  text-align: center;
+}
+.phone-card {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.phone-card .pc-title { font-weight: 700; color: var(--gray-900); margin-bottom: 3px; }
+.phone-card .pc-sub   { color: var(--gray-500); font-size: 10px; }
+.phone-card .pc-val   { font-weight: 800; color: var(--blue); font-size: 14px; }
+
+/* ═══════════════════════════════════════════════
+   DATA RELATIONSHIP DIAGRAM
+═══════════════════════════════════════════════ */
+.rel-diagram {
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  padding: 28px;
+  margin: 20px 0;
+}
+.rel-entity {
+  display: inline-block;
+  border: 2px solid var(--blue);
+  background: #eff6ff;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  margin: 4px;
+}
+.rel-entity.service { border-color: var(--teal); background: #e0f2fe; color: var(--teal); }
+.rel-entity.db { border-color: var(--green); background: #f0fdf4; color: #065f46; }
+
+/* ═══════════════════════════════════════════════
+   TOC
+═══════════════════════════════════════════════ */
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 24px;
+}
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--gray-700);
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.toc-item:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; }
+.toc-item .toc-num {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--blue);
+  background: #eff6ff;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   INLINE CODE
+═══════════════════════════════════════════════ */
+code {
+  background: #f1f5f9;
+  border: 1px solid var(--gray-200);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #c026d3;
+}
+
+/* ═══════════════════════════════════════════════
+   HR / DIVIDER
+═══════════════════════════════════════════════ */
+hr { border: none; border-top: 1px solid var(--gray-200); margin: 32px 0; }
+
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+  SIDEBAR NAV
+============================================================ -->
+<nav>
+  <div class="nav-logo">
+    <span>⚡ Yana OS</span>
+    <span class="version">v1.0 — Complete Documentation</span>
+  </div>
+  <ul>
+    <li><a href="#cover" class="section-header">OVERVIEW</a></li>
+    <li><a href="#toc">Table of Contents</a></li>
+    <li><a href="#executive-summary">Executive Summary</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+
+    <li><a href="#admin-dashboard" class="section-header">ADMIN DASHBOARD</a></li>
+    <li><a href="#admin-login" class="sub">Login</a></li>
+    <li><a href="#admin-overview" class="sub">Dashboard Overview</a></li>
+    <li><a href="#admin-riders" class="sub">Riders Module</a></li>
+    <li><a href="#admin-fleet" class="sub">Fleet Module</a></li>
+    <li><a href="#admin-payments" class="sub">Payments Module</a></li>
+    <li><a href="#admin-marketplace" class="sub">Marketplace Module</a></li>
+    <li><a href="#admin-skills" class="sub">Skills Module</a></li>
+    <li><a href="#admin-support" class="sub">Support Module</a></li>
+    <li><a href="#admin-maintenance" class="sub">Maintenance Module</a></li>
+
+    <li><a href="#rider-app" class="section-header">RIDER MOBILE APP</a></li>
+    <li><a href="#app-auth" class="sub">Authentication</a></li>
+    <li><a href="#app-jobs" class="sub">Jobs / Slots</a></li>
+    <li><a href="#app-wallet" class="sub">Wallet</a></li>
+    <li><a href="#app-skills" class="sub">Skills</a></li>
+    <li><a href="#app-support" class="sub">Support</a></li>
+
+    <li><a href="#data-architecture" class="section-header">DATA & FLOWS</a></li>
+    <li><a href="#db-schema" class="sub">Database Schemas</a></li>
+    <li><a href="#data-relationships" class="sub">Data Relationships</a></li>
+    <li><a href="#data-flow" class="sub">Data Flow</a></li>
+
+    <li><a href="#workflows" class="section-header">BUSINESS WORKFLOWS</a></li>
+    <li><a href="#wf-onboarding" class="sub">Rider Onboarding</a></li>
+    <li><a href="#wf-allotment" class="sub">Vehicle Allotment</a></li>
+    <li><a href="#wf-demand" class="sub">Demand & Earnings</a></li>
+    <li><a href="#wf-support" class="sub">Support Lifecycle</a></li>
+    <li><a href="#wf-payments" class="sub">Rent & Payments</a></li>
+
+    <li><a href="#tech-stack" class="section-header">TECHNOLOGY</a></li>
+    <li><a href="#tech-backend" class="sub">Backend</a></li>
+    <li><a href="#tech-frontend" class="sub">Frontend / App</a></li>
+    <li><a href="#tech-infra" class="sub">Infrastructure</a></li>
+    <li><a href="#api-gateway" class="sub">API Gateway</a></li>
+
+    <li><a href="#deployment" class="section-header">DEPLOYMENT</a></li>
+    <li><a href="#local-setup" class="sub">Local Setup</a></li>
+    <li><a href="#kubernetes" class="sub">Kubernetes</a></li>
+  </ul>
+</nav>
+
+<!-- ============================================================
+  MAIN CONTENT
+============================================================ -->
+<main>
+
+<!-- ─────────────────────────── COVER ─────────────────────────── -->
+<div class="cover" id="cover">
+  <div class="cover-badge">Official Product Documentation</div>
+  <h1>Yana <span>OS</span></h1>
+  <p class="tagline">Complete platform for electric vehicle rider operations — onboarding, fleet, payments, marketplace, skills &amp; support.</p>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <label>Version</label>
+      <span>1.0.0 (Stable)</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Document Type</label>
+      <span>User Manual &amp; Technical Ref</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Last Updated</label>
+      <span>April 2026</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Audience</label>
+      <span>Admins, Ops, Developers</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Platform</label>
+      <span>Web + Android/iOS</span>
+    </div>
+    <div class="cover-meta-item">
+      <label>Status</label>
+      <span>Production Ready</span>
+    </div>
+  </div>
+  <div class="cover-services">
+    <span>Auth Service</span>
+    <span>Rider Service</span>
+    <span>Fleet Service</span>
+    <span>Payments Service</span>
+    <span>Marketplace Service</span>
+    <span>Skills Service</span>
+    <span>Support Service</span>
+    <span>Maintenance Service</span>
+    <span>Admin Dashboard</span>
+    <span>Rider Mobile App</span>
+  </div>
+</div>
+
+<!-- ─────────────────────────── TABLE OF CONTENTS ─────────────────────────── -->
+<div class="section-wrap" id="toc">
+  <div class="section-pill">Navigation</div>
+  <h2>Table of Contents</h2>
+  <p class="h2-sub">Click any section to navigate directly to it.</p>
+  <div class="toc-grid">
+    <a href="#executive-summary" class="toc-item"><span class="toc-num">1</span> Executive Summary</a>
+    <a href="#architecture" class="toc-item"><span class="toc-num">2</span> System Architecture</a>
+    <a href="#admin-dashboard" class="toc-item"><span class="toc-num">3</span> Admin Dashboard Manual</a>
+    <a href="#rider-app" class="toc-item"><span class="toc-num">4</span> Rider Mobile App Manual</a>
+    <a href="#data-architecture" class="toc-item"><span class="toc-num">5</span> Data Architecture &amp; Schemas</a>
+    <a href="#data-relationships" class="toc-item"><span class="toc-num">6</span> Data Relationships</a>
+    <a href="#workflows" class="toc-item"><span class="toc-num">7</span> Business Workflows</a>
+    <a href="#tech-stack" class="toc-item"><span class="toc-num">8</span> Technology Stack</a>
+    <a href="#tech-infra" class="toc-item"><span class="toc-num">9</span> Infrastructure &amp; Deployment</a>
+    <a href="#api-gateway" class="toc-item"><span class="toc-num">10</span> API Gateway &amp; Routing</a>
+  </div>
+</div>
+
+<!-- ─────────────────────────── EXECUTIVE SUMMARY ─────────────────────────── -->
+<div class="section-wrap" id="executive-summary">
+  <div class="section-pill">Section 1</div>
+  <h2>Executive Summary</h2>
+  <p class="h2-sub">What Yana OS is, who uses it, and the problems it solves.</p>
+
+  <p>
+    <strong>Yana OS</strong> is a production-grade, microservices-based operations platform for managing a fleet of electric vehicles and the riders who operate them. It provides a complete digital backbone for EV-based gig workforce companies — from recruiting and verifying riders, to assigning vehicles, scheduling demand work shifts, collecting daily rent, training riders, and resolving support issues.
+  </p>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="fc-icon">🏍️</div>
+      <h5>Rider Lifecycle</h5>
+      <p>End-to-end digital onboarding with KYC verification, document management, and status state machine from application to activation.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🚗</div>
+      <h5>Fleet Management</h5>
+      <p>Track every vehicle — GPS telemetry, battery health, allotments, maintenance schedules, and hub utilization.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">💰</div>
+      <h5>Payments &amp; Wallet</h5>
+      <p>Immutable double-entry ledger, automated daily rent collection, Razorpay/UPI autopay, incentives, and penalties.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">📋</div>
+      <h5>Demand Marketplace</h5>
+      <p>Client demand slot publishing, smart rider matching, attendance check-in/out with GPS, and automated earnings calculation.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🎓</div>
+      <h5>Skills &amp; Training</h5>
+      <p>Multilingual video training modules with quizzes, badges, points, streaks, and global leaderboard gamification.</p>
+    </div>
+    <div class="feature-card">
+      <div class="fc-icon">🎧</div>
+      <h5>Support</h5>
+      <p>Full ticket lifecycle with SLA tracking, multi-channel messaging, WhatsApp integration, and satisfaction ratings.</p>
+    </div>
+  </div>
+
+  <h3>Primary User Roles</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Role</th><th>Platform</th><th>Primary Responsibilities</th></tr></thead>
+      <tbody>
+        <tr><td>SUPER_ADMIN</td><td>Admin Dashboard</td><td>Full system access — all modules, user management, financial controls</td></tr>
+        <tr><td>CITY_ADMIN</td><td>Admin Dashboard</td><td>City-scoped operations — riders, fleet, marketplace for their city</td></tr>
+        <tr><td>HUB_OPS</td><td>Admin Dashboard</td><td>Hub-level fleet operations — vehicle allotments, maintenance, returns</td></tr>
+        <tr><td>SALES</td><td>Admin Dashboard</td><td>Client management, demand slot creation, marketplace analytics</td></tr>
+        <tr><td>SUPPORT_AGENT</td><td>Admin Dashboard</td><td>Ticket resolution, rider communication, KYC document review</td></tr>
+        <tr><td>VIEWER</td><td>Admin Dashboard</td><td>Read-only access to dashboards and reports</td></tr>
+        <tr><td>Rider</td><td>Mobile App (Flutter)</td><td>View jobs, apply for slots, check wallet, watch training, raise tickets</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Platform Components</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Component</th><th>Technology</th><th>URL / Access</th></tr></thead>
+      <tbody>
+        <tr><td>Admin Dashboard</td><td>React 18 + Vite + Tailwind</td><td><code>http://localhost:3000</code></td></tr>
+        <tr><td>Rider Mobile App</td><td>Flutter 3.41 + Riverpod</td><td>Android / iOS APK</td></tr>
+        <tr><td>API Gateway</td><td>Nginx</td><td><code>http://localhost:8000</code></td></tr>
+        <tr><td>API Documentation</td><td>Swagger / OpenAPI</td><td><code>http://localhost:800X/api/docs/</code></td></tr>
+        <tr><td>MinIO Console</td><td>S3-Compatible Storage</td><td><code>http://localhost:9001</code></td></tr>
+        <tr><td>Database</td><td>PostgreSQL 15</td><td>Port 5432 (internal)</td></tr>
+        <tr><td>Cache / Queue</td><td>Redis 7</td><td>Port 6379 (internal)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ─────────────────────────── ARCHITECTURE ─────────────────────────── -->
+<div class="section-wrap" id="architecture">
+  <div class="section-pill">Section 2</div>
+  <h2>System Architecture</h2>
+  <p class="h2-sub">How all components connect, route, and communicate with each other.</p>
+
+  <p>
+    Yana OS follows a <strong>microservices architecture</strong> where each domain is an independent Django service. All traffic is routed through an Nginx API Gateway. Asynchronous tasks are handled by Celery workers backed by Redis. File storage uses MinIO (S3-compatible). All services share a single PostgreSQL 15 database with separate schemas.
+  </p>
+
+  <div class="arch-diagram">
+    <div class="arch-label">Client Layer</div>
+    <div class="arch-row">
+      <div class="arch-box ab-blue">Admin Dashboard<span class="arch-port">React + Vite :3000</span></div>
+      <div class="arch-box ab-blue">Rider Mobile App<span class="arch-port">Flutter Android/iOS</span></div>
+    </div>
+    <div class="arch-arrow-row">↓↑&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↓↑</div>
+    <div class="arch-label">API Gateway (Nginx)</div>
+    <div class="arch-row">
+      <div class="arch-box ab-navy">Nginx API Gateway<span class="arch-port">:8000 / :8081</span></div>
+    </div>
+    <div class="arch-arrow-row">↓↑</div>
+    <div class="arch-label">Microservices Layer</div>
+    <div class="arch-row">
+      <div class="arch-box ab-teal">Auth<span class="arch-port">:8001</span></div>
+      <div class="arch-box ab-teal">Rider<span class="arch-port">:8002</span></div>
+      <div class="arch-box ab-teal">Fleet<span class="arch-port">:8003</span></div>
+      <div class="arch-box ab-teal">Payments<span class="arch-port">:8004</span></div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-box ab-teal">Marketplace<span class="arch-port">:8005</span></div>
+      <div class="arch-box ab-teal">Maintenance<span class="arch-port">:8006</span></div>
+      <div class="arch-box ab-teal">Skills<span class="arch-port">:8007</span></div>
+      <div class="arch-box ab-teal">Support<span class="arch-port">:8008</span></div>
+    </div>
+    <div class="arch-row">
+      <div class="arch-box ab-amber">Fleet Telemetry<span class="arch-port">FastAPI :8013 (WebSocket)</span></div>
+    </div>
+    <div class="arch-arrow-row">↓↑</div>
+    <div class="arch-label">Data &amp; Async Layer</div>
+    <div class="arch-row">
+      <div class="arch-box ab-green">PostgreSQL 15<span class="arch-port">:5432</span></div>
+      <div class="arch-box ab-red">Redis 7<span class="arch-port">:6379 Cache+Queue</span></div>
+      <div class="arch-box ab-gray">MinIO<span class="arch-port">:9000 File Storage</span></div>
+      <div class="arch-box ab-amber">Celery Workers<span class="arch-port">8× service workers</span></div>
+    </div>
+  </div>
+
+  <h3>Request Flow</h3>
+  <p>Every API call follows this path:</p>
+  <div class="workflow">
+    <div class="wf-step">
+      <div class="wf-circle">1</div>
+      <div class="wf-label">Client Request</div>
+      <div class="wf-sub">Browser / App</div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-circle">2</div>
+      <div class="wf-label">Nginx Gateway</div>
+      <div class="wf-sub">Rate limiting, routing</div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-circle admin">3</div>
+      <div class="wf-label">Auth Middleware</div>
+      <div class="wf-sub">JWT validation</div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-circle">4</div>
+      <div class="wf-label">Django Service</div>
+      <div class="wf-sub">Business logic</div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-circle">5</div>
+      <div class="wf-label">PostgreSQL</div>
+      <div class="wf-sub">Data persistence</div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-circle done">6</div>
+      <div class="wf-label">JSON Response</div>
+      <div class="wf-sub">success + data</div>
+    </div>
+  </div>
+
+  <h3>Standard API Response Format</h3>
+  <p>All services use a consistent response envelope:</p>
+  <div class="code-block">
+    <span class="lang-tag">JSON</span>
+    <pre>{
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: {
+    <span class="cmt">// Response payload — object or list</span>
+  }
+}
+
+<span class="cmt">// Error response:</span>
+{
+  <span class="key">"success"</span>: <span class="kw">false</span>,
+  <span class="key">"error"</span>: {
+    <span class="key">"message"</span>: <span class="str">"Human-readable error"</span>,
+    <span class="key">"code"</span>:    <span class="str">"MACHINE_READABLE_CODE"</span>
+  }
+}</pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 3 — ADMIN DASHBOARD
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="admin-dashboard">
+  <div class="section-pill">Section 3</div>
+  <h2>Admin Dashboard — User Manual</h2>
+  <p class="h2-sub">Complete guide to every page, tile, filter, dropdown and action in the Admin Dashboard.</p>
+
+  <div class="callout info">
+    <strong>Access</strong>
+    The Admin Dashboard runs at <code>http://localhost:3000</code>. It is built with React 18, Vite, and Tailwind CSS. All data is fetched live from the backend API Gateway at <code>http://localhost:8000</code>.
+  </div>
+
+  <!-- Login -->
+  <h3 id="admin-login">3.1 — Login Page</h3>
+  <p>The login page is the entry point for all admin users. It authenticates against the Auth Service using email and password.</p>
+
+  <div class="ui-mockup">
+    <div class="ui-titlebar">
+      <div class="ui-dot r"></div><div class="ui-dot y"></div><div class="ui-dot g"></div>
+      <span class="ui-url">localhost:3000/login</span>
+    </div>
+    <div class="ui-body" style="padding:40px 48px;background:#f8fafc;text-align:center;">
+      <div style="max-width:340px;margin:0 auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;padding:36px 32px;">
+        <div style="font-size:28px;font-weight:900;color:#0f2044;margin-bottom:4px;">⚡ Yana OS</div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:28px;">Admin Control Panel</div>
+        <div style="text-align:left;">
+          <div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:4px;">EMAIL ADDRESS</div>
+          <div style="border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;font-size:13px;color:#64748b;margin-bottom:14px;">admin@yana.in</div>
+          <div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:4px;">PASSWORD</div>
+          <div style="border:1px solid #e2e8f0;border-radius:6px;padding:9px 12px;font-size:13px;color:#64748b;margin-bottom:20px;">••••••••</div>
+          <div style="background:#1d4ed8;color:#fff;border-radius:6px;padding:10px;font-size:13px;font-weight:700;text-align:center;">Sign In to Dashboard</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Fields &amp; Actions</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field / Control</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Email Address</td><td>Text input</td><td>Admin account email. Seeded accounts: admin@yana.in, ops@yana.in, sales@yana.in</td></tr>
+      <tr><td>Password</td><td>Password input</td><td>Admin account password. Default seeded passwords: Admin@123, Ops@123, Sales@123</td></tr>
+      <tr><td>Sign In button</td><td>Action</td><td>Calls <code>POST /api/v1/auth/admin/login</code>. On success, stores JWT access and refresh tokens in localStorage. Redirects to Dashboard.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout tip">
+    <strong>Session Management</strong>
+    Access tokens expire in 1 hour. The dashboard automatically refreshes them using the stored refresh token. If both expire, the user is redirected to login.
+  </div>
+
+  <!-- Dashboard Overview -->
+  <h3 id="admin-overview">3.2 — Dashboard Overview (Control Tower)</h3>
+  <p>The main dashboard provides a real-time operational snapshot of the entire Yana OS platform. It is the first screen after login and serves as a command center for operations teams.</p>
+
+  <div class="ui-mockup">
+    <div class="ui-titlebar">
+      <div class="ui-dot r"></div><div class="ui-dot y"></div><div class="ui-dot g"></div>
+      <span class="ui-url">localhost:3000 — Dashboard</span>
+    </div>
+    <div class="ui-body">
+      <div class="stat-grid">
+        <div class="stat-tile blue">
+          <div class="st-label">Active Riders</div>
+          <div class="st-value">1,247</div>
+          <div class="st-trend-up">↑ 3.2% this week</div>
+        </div>
+        <div class="stat-tile green">
+          <div class="st-label">Fleet Utilization</div>
+          <div class="st-value">84%</div>
+          <div class="st-sub">1,048 / 1,250 vehicles</div>
+        </div>
+        <div class="stat-tile green">
+          <div class="st-label">Rent Today</div>
+          <div class="st-value">₹3.7L</div>
+          <div class="st-sub">MTD: ₹58.2L</div>
+        </div>
+        <div class="stat-tile amber">
+          <div class="st-label">Demand Fill Rate</div>
+          <div class="st-value">91%</div>
+          <div class="st-sub">438 / 480 slots filled</div>
+        </div>
+        <div class="stat-tile red">
+          <div class="st-label">Open Tickets</div>
+          <div class="st-value">23</div>
+          <div class="st-trend-down">↑ 5 escalated</div>
+        </div>
+        <div class="stat-tile amber">
+          <div class="st-label">Maint. Alerts</div>
+          <div class="st-value">12</div>
+          <div class="st-sub">4 critical</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Dashboard Tiles — Purpose &amp; Rationale</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tile</th><th>Source API</th><th>Metric Calculated As</th><th>Business Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Active Riders</td><td>Rider Service</td><td>COUNT(riders WHERE status='ACTIVE')</td><td>Operational capacity indicator. Falling numbers signal churn or KYC backlog.</td></tr>
+      <tr><td>Fleet Utilization</td><td>Fleet Service</td><td>ALLOCATED / (AVAILABLE + ALLOCATED) × 100</td><td>Asset ROI indicator. Below 75% signals under-allocation; above 95% signals shortage risk.</td></tr>
+      <tr><td>Rent Today</td><td>Payments Service</td><td>SUM(wallet_ledger WHERE payment_type=DAILY_RENT AND accounting_date=today)</td><td>Daily revenue health check. Compare to expected (active riders × daily rent).</td></tr>
+      <tr><td>Demand Fill Rate</td><td>Marketplace Service</td><td>SUM(riders_confirmed) / SUM(riders_required) × 100 for today's slots</td><td>Client SLA adherence. Below 85% triggers manual outreach to riders.</td></tr>
+      <tr><td>Open Tickets</td><td>Support Service</td><td>COUNT(tickets WHERE status IN ('OPEN','ASSIGNED','IN_PROGRESS'))</td><td>Support queue health. Escalated count shown separately for manager awareness.</td></tr>
+      <tr><td>Maintenance Alerts</td><td>Fleet/Maintenance Service</td><td>COUNT(alerts WHERE is_acknowledged=False)</td><td>Fleet safety indicator. Critical alerts (battery, brakes) require same-day action.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Dashboard Charts</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Chart</th><th>Type</th><th>Data</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td>Revenue Trend</td><td>Line chart (30 days)</td><td>Daily rent + incentives credited</td><td>Track revenue growth; identify collection dips</td></tr>
+      <tr><td>Fleet Status</td><td>Donut chart</td><td>Vehicle counts by status</td><td>Visualize available vs allocated vs maintenance vehicles</td></tr>
+      <tr><td>Hub Utilization</td><td>Horizontal bar</td><td>Per-hub utilization %</td><td>Identify underperforming hubs needing attention</td></tr>
+      <tr><td>Demand vs Attendance</td><td>Grouped bar</td><td>Required vs confirmed vs shown-up riders per day</td><td>Identify no-show patterns and slot fill efficiency</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- Riders Module -->
+  <h3 id="admin-riders">3.3 — Riders Module</h3>
+  <p>The Riders module is the central hub for managing the rider workforce. It covers the complete lifecycle from application through activation, KYC verification, document management, and offboarding.</p>
+
+  <h4>3.3.1 Riders List View</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>UI Control</th><th>Type</th><th>Values / Options</th><th>Effect</th></tr></thead>
+    <tbody>
+      <tr><td>Search Bar</td><td>Text input</td><td>Name, phone, email</td><td>API param: <code>?q=search_term</code> — Filters riders by name/phone/email</td></tr>
+      <tr><td>Status Filter</td><td>Dropdown (multi-select)</td><td>APPLIED, DOCS_SUBMITTED, KYC_PENDING, KYC_FAILED, VERIFIED, TRAINING, ACTIVE, SUSPENDED, OFFBOARDED</td><td>API param: <code>?status=ACTIVE,TRAINING</code></td></tr>
+      <tr><td>City Filter</td><td>Dropdown</td><td>List of active cities</td><td>API param: <code>?city_id=UUID</code></td></tr>
+      <tr><td>Hub Filter</td><td>Dropdown (dependent on city)</td><td>Hubs in selected city</td><td>API param: <code>?hub_id=UUID</code></td></tr>
+      <tr><td>KYC Status Filter</td><td>Dropdown</td><td>PENDING, SUBMITTED, UNDER_REVIEW, VERIFIED, REJECTED</td><td>API param: <code>?kyc_status=UNDER_REVIEW</code></td></tr>
+      <tr><td>Date Range</td><td>Date pickers</td><td>Start/end date</td><td>Filter by rider created_at date range</td></tr>
+      <tr><td>Page Size</td><td>Dropdown</td><td>10, 25, 50, 100</td><td>API param: <code>?page_size=25</code></td></tr>
+      <tr><td>Export CSV</td><td>Button</td><td>—</td><td>Downloads filtered results as CSV</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.3.2 Rider Detail View</h4>
+  <p>Clicking any rider opens the full detail panel with tabbed sections:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tab</th><th>Data Shown</th><th>Actions Available</th></tr></thead>
+    <tbody>
+      <tr><td>Profile</td><td>Name, phone, email, DOB, gender, address, profile photo</td><td>Edit profile fields, update preferred language</td></tr>
+      <tr><td>KYC Documents</td><td>Aadhaar (front/back), PAN, Driving License, bank documents — each with upload date, status badge</td><td>Approve / Reject individual documents with reason; bulk KYC decision</td></tr>
+      <tr><td>KYC History</td><td>Chronological log of all KYC actions — who did what, when, with notes</td><td>Read-only audit trail</td></tr>
+      <tr><td>Nominees</td><td>Nominee list with relationship, phone, Aadhaar (masked)</td><td>Add / edit nominees</td></tr>
+      <tr><td>Vehicle</td><td>Current vehicle allotment (if any) — vehicle reg number, hub, allotted date, daily rent</td><td>Link to vehicle detail</td></tr>
+      <tr><td>Wallet</td><td>Current balance, recent transactions</td><td>Link to full wallet page for this rider</td></tr>
+      <tr><td>Skills</td><td>Module completion progress, badges earned, gamification score</td><td>View detailed progress</td></tr>
+      <tr><td>Status Audit</td><td>Full history of rider status changes with timestamps and actor</td><td>Read-only compliance log</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.3.3 KYC Decision Workflow</h4>
+  <div class="callout warn">
+    <strong>Important</strong>
+    KYC decisions are irreversible once set to VERIFIED. Rejection requires a written reason which is logged and visible to the rider.
+  </div>
+  <p>The KYC Decision dropdown allows admins to set the overall KYC verdict:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Decision</th><th>Sets rider.kyc_status to</th><th>Next Allowed Action</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge green">APPROVE</span></td><td>VERIFIED</td><td>Rider can proceed to training; eligible for vehicle allotment</td></tr>
+      <tr><td><span class="badge red">REJECT</span></td><td>REJECTED</td><td>Rider must re-submit documents; reason is recorded in KYC log</td></tr>
+      <tr><td><span class="badge amber">REQUEST INFO</span></td><td>UNDER_REVIEW</td><td>Rider notified to provide clarification or re-upload specific documents</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- Fleet Module -->
+  <h3 id="admin-fleet">3.4 — Fleet Module</h3>
+  <p>The Fleet module gives operations teams complete visibility and control over the electric vehicle fleet across all hubs.</p>
+
+  <h4>3.4.1 Vehicles List View — Filters &amp; Columns</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Filter / Column</th><th>Type</th><th>Options</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Registration Search</td><td>Text input</td><td>Partial match on reg. number</td><td>Quick lookup by plate number</td></tr>
+      <tr><td>Status Filter</td><td>Dropdown</td><td>AVAILABLE, ALLOCATED, MAINTENANCE, RETIRED, LOST</td><td>Filter by operational state</td></tr>
+      <tr><td>Hub Filter</td><td>Dropdown</td><td>All active hubs</td><td>Show vehicles belonging to a hub</td></tr>
+      <tr><td>City Filter</td><td>Dropdown</td><td>All cities</td><td>City-scoped operations</td></tr>
+      <tr><td>Compliance Alerts</td><td>Checkbox toggle</td><td>ON/OFF</td><td>Show only vehicles with expired insurance/PUC/fitness</td></tr>
+      <tr><td>Battery Below %</td><td>Number input</td><td>0–100</td><td>Find vehicles with low battery needing charge</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.4.2 Vehicle Detail — Sections</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Section</th><th>Data Fields</th><th>Actions</th></tr></thead>
+    <tbody>
+      <tr><td>Identity</td><td>Registration, chassis, motor number, make, model, year, color</td><td>Edit vehicle details</td></tr>
+      <tr><td>EV Specs</td><td>Battery capacity (kWh), battery health (%), range (km), max speed</td><td>Update battery health %</td></tr>
+      <tr><td>Live Telemetry</td><td>Current GPS lat/lng (map link), battery level, odometer, charging status, last seen timestamp</td><td>View GPS history</td></tr>
+      <tr><td>Compliance</td><td>Insurance expiry, PUC expiry, fitness expiry — color-coded (red=expired, amber=30 days, green=OK)</td><td>Upload renewal documents</td></tr>
+      <tr><td>Allotment History</td><td>All rider allotments — rider name, dates, km driven, condition</td><td>Create new allotment</td></tr>
+      <tr><td>Maintenance</td><td>Upcoming service date/km, maintenance log history</td><td>Log maintenance record</td></tr>
+      <tr><td>Status Change</td><td>Current status with audit trail</td><td>Change status (AVAILABLE → MAINTENANCE, etc.)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.4.3 Vehicle Allotment Form — Fields</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Required</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Rider</td><td>Yes</td><td>Search active riders — must have status=ACTIVE and no current allotment</td></tr>
+      <tr><td>Vehicle</td><td>Yes</td><td>Select AVAILABLE vehicle from hub's inventory</td></tr>
+      <tr><td>Odometer at Allotment</td><td>Yes</td><td>Current odometer reading — forms baseline for km_driven calculation</td></tr>
+      <tr><td>Battery % at Allotment</td><td>Yes</td><td>Battery percentage at time of handover</td></tr>
+      <tr><td>Condition at Allotment</td><td>Yes</td><td>Description of vehicle condition — photographic evidence recommended</td></tr>
+      <tr><td>Daily Rent Amount</td><td>Yes</td><td>INR amount per day — auto-filled from contract but editable</td></tr>
+      <tr><td>Security Deposit</td><td>Yes</td><td>One-time deposit amount collected from rider</td></tr>
+      <tr><td>Expected Return Date</td><td>No</td><td>Optional expected return date for planning</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.4.4 Hub Utilization Dashboard</h4>
+  <p>Each hub shows a utilization card with:</p>
+  <ul>
+    <li><strong>Total Capacity</strong> — configured vehicle slots at this hub</li>
+    <li><strong>Available</strong> — count of AVAILABLE vehicles (ready to allot)</li>
+    <li><strong>Allocated</strong> — count of ALLOCATED vehicles (currently with riders)</li>
+    <li><strong>In Maintenance</strong> — vehicles being serviced</li>
+    <li><strong>Utilization %</strong> — Allocated / (Allocated + Available) × 100</li>
+    <li><strong>Manager</strong> — Hub manager name and contact</li>
+  </ul>
+
+  <!-- Payments Module -->
+  <h3 id="admin-payments">3.5 — Payments Module</h3>
+  <p>The Payments module provides complete financial oversight — wallet balances, rent scheduling, transaction ledger, overdue tracking, and manual adjustments.</p>
+
+  <h4>3.5.1 Wallet View — Per Rider</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Section</th><th>Data Shown</th><th>Available Actions</th></tr></thead>
+    <tbody>
+      <tr><td>Wallet Summary</td><td>Current balance, total earned (all time), total paid out, pending dues, security deposit held</td><td>—</td></tr>
+      <tr><td>Ledger Entries</td><td>All credit/debit transactions with timestamp, type, amount, balance_after</td><td>Filter by direction (Credit/Debit), payment_type, date range</td></tr>
+      <tr><td>Rent Schedule</td><td>Day-by-day rent dues with status (PENDING, PAID, OVERDUE, WAIVED)</td><td>Waive a rent entry with reason</td></tr>
+      <tr><td>Admin Adjustment</td><td>—</td><td>Credit or debit arbitrary amount with mandatory reason (audit logged)</td></tr>
+      <tr><td>Incentive Credit</td><td>—</td><td>Credit performance incentive with type and description</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.5.2 Ledger Filter Options</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Filter</th><th>Options</th></tr></thead>
+    <tbody>
+      <tr><td>Direction</td><td>Credit (C), Debit (D), Both</td></tr>
+      <tr><td>Payment Type</td><td>DAILY_RENT, SECURITY_DEPOSIT, INCENTIVE, PENALTY, REFUND, ADJUSTMENT, WITHDRAWAL, TOPUP, DEPOSIT_REFUND</td></tr>
+      <tr><td>Date Range</td><td>From date — To date (accounting_date)</td></tr>
+      <tr><td>Amount Range</td><td>Min / Max INR amount</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.5.3 Payments Admin Summary</h4>
+  <p>The admin summary dashboard (accessible to SUPER_ADMIN and CITY_ADMIN) shows platform-wide metrics:</p>
+  <ul>
+    <li>Total rent collected today / this week / this month</li>
+    <li>Total overdue amount across all riders</li>
+    <li>Count of riders with overdue rent (by days overdue: 1–3, 4–7, 7+ days)</li>
+    <li>Incentives disbursed (MTD)</li>
+    <li>Security deposits held vs refunded</li>
+    <li>Top 10 riders by outstanding dues</li>
+  </ul>
+
+  <!-- Marketplace Module -->
+  <h3 id="admin-marketplace">3.6 — Marketplace Module</h3>
+  <p>The Marketplace module connects client demand with available riders. It covers client management, demand slot lifecycle, rider applications, attendance, and payout.</p>
+
+  <h4>3.6.1 Client Management</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Client Name</td><td>Company name (e.g., "Zepto", "Blinkit", "Zomato")</td></tr>
+      <tr><td>Category</td><td>quick_commerce, food_delivery, logistics, etc.</td></tr>
+      <tr><td>GSTIN / PAN</td><td>Tax identifiers for invoice generation</td></tr>
+      <tr><td>Primary Contact</td><td>Name, email, phone of the client's operations contact</td></tr>
+      <tr><td>Dark Stores</td><td>Locations/warehouses where riders report for duty — each with address, GPS, city, hub linkage</td></tr>
+      <tr><td>Contracts</td><td>Pricing contracts defining pay structure, SLA terms, contract period per dark store</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.6.2 Demand Slot — Creation Form</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Required</th><th>Options / Format</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Client</td><td>Yes</td><td>Dropdown — active clients</td><td>Which client is posting this demand</td></tr>
+      <tr><td>Dark Store</td><td>Yes</td><td>Dropdown — client's dark stores</td><td>Location where riders will report</td></tr>
+      <tr><td>Shift Date</td><td>Yes</td><td>Date picker</td><td>Date of the shift</td></tr>
+      <tr><td>Shift Type</td><td>Yes</td><td>MORNING (6am-2pm), AFTERNOON (2pm-10pm), NIGHT (10pm-6am), CUSTOM</td><td>Pre-defined time windows or custom</td></tr>
+      <tr><td>Start / End Time</td><td>Yes (if CUSTOM)</td><td>Time picker</td><td>Exact shift window</td></tr>
+      <tr><td>Riders Required</td><td>Yes</td><td>Integer (1–500)</td><td>How many riders the client needs</td></tr>
+      <tr><td>Pay Structure</td><td>Yes</td><td>PER_ORDER, PER_SHIFT, PER_HOUR, HYBRID</td><td>How rider earnings are calculated</td></tr>
+      <tr><td>Pay Rate</td><td>Yes</td><td>INR amount per applicable unit</td><td>e.g., ₹50/order or ₹500/shift</td></tr>
+      <tr><td>Earnings Estimate</td><td>No</td><td>INR</td><td>Shown to riders to set expectation</td></tr>
+      <tr><td>Min Reliability Score</td><td>No</td><td>0.0–5.0</td><td>Only show to riders with score above threshold</td></tr>
+      <tr><td>Required Hubs</td><td>No</td><td>Multi-select hubs</td><td>Target riders from specific hubs only</td></tr>
+      <tr><td>Badge Required</td><td>No</td><td>Badge code dropdown</td><td>Require a specific skill badge</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.6.3 Demand Slot Lifecycle — Status &amp; Actions</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Status</th><th>Meaning</th><th>Available Admin Actions</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge gray">DRAFT</span></td><td>Created but not visible to riders</td><td>Edit, Publish, Cancel</td></tr>
+      <tr><td><span class="badge blue">PUBLISHED</span></td><td>Visible to riders in app — accepting applications</td><td>View applications, Bulk-confirm, Cancel</td></tr>
+      <tr><td><span class="badge amber">PARTIALLY_FILLED</span></td><td>Some riders confirmed but still need more</td><td>View applications, Bulk-confirm remaining</td></tr>
+      <tr><td><span class="badge green">FILLED</span></td><td>All required riders confirmed</td><td>View final roster, Trigger payout post-shift</td></tr>
+      <tr><td><span class="badge gray">EXPIRED</span></td><td>Shift date passed without being filled</td><td>View analytics, Duplicate for new date</td></tr>
+      <tr><td><span class="badge red">CANCELLED</span></td><td>Manually cancelled by admin</td><td>View audit log</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.6.4 Applications View — Columns &amp; Actions</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Column</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Rider Name / Phone</td><td>Rider who applied</td></tr>
+      <tr><td>Match Score</td><td>AI-computed match score (0–100) based on hub proximity, reliability score, badges, past attendance</td></tr>
+      <tr><td>Status</td><td>APPLIED → SHORTLISTED → CONFIRMED → COMPLETED / NO_SHOW</td></tr>
+      <tr><td>Applied At</td><td>Timestamp of application</td></tr>
+      <tr><td>Check-in / Check-out</td><td>Actual attendance timestamps with GPS coordinates</td></tr>
+      <tr><td>Orders Completed</td><td>For PER_ORDER slots — number of deliveries done</td></tr>
+      <tr><td>Hours Worked</td><td>Actual hours from check-in to check-out</td></tr>
+      <tr><td>Earnings</td><td>Calculated earnings; credited flag</td></tr>
+      <tr><td>Actions</td><td>CONFIRM, REJECT, MARK NO-SHOW (post-shift)</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- Skills Module -->
+  <h3 id="admin-skills">3.7 — Skills Module</h3>
+  <p>The Skills module allows admins to create and publish training content, track rider progress, and manage the gamification system.</p>
+
+  <h4>3.7.1 Module Management</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Title (EN)</td><td>Module title in English</td></tr>
+      <tr><td>Title (HI)</td><td>Module title in Hindi — shown to riders with language preference=Hindi</td></tr>
+      <tr><td>Description</td><td>Brief description of the module content</td></tr>
+      <tr><td>Thumbnail URL</td><td>Cover image for the module card in the app</td></tr>
+      <tr><td>Sequence Order</td><td>Display order in the module list (drag-to-reorder)</td></tr>
+      <tr><td>Is Mandatory</td><td>If ON, riders must complete this module before they can be activated</td></tr>
+      <tr><td>Is Published</td><td>Controls visibility in rider app — toggle to publish/unpublish</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.7.2 Video Management</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Video URL</td><td>S3/MinIO path to the video file</td></tr>
+      <tr><td>Duration (seconds)</td><td>Video length — shown to riders as "Xm Ys"</td></tr>
+      <tr><td>Points Reward</td><td>Gamification points awarded on completion (default: 10)</td></tr>
+      <tr><td>Has Quiz</td><td>Toggle to enable a quiz after video completion</td></tr>
+      <tr><td>Quiz Questions</td><td>JSON array: [{question, options: [A,B,C,D], answer: "A"}]</td></tr>
+      <tr><td>Quiz Pass Score</td><td>Minimum correct answers % to earn points (default: 70%)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.7.3 Leaderboard &amp; Progress Tracking</h4>
+  <p>The Skills analytics view shows:</p>
+  <ul>
+    <li><strong>Completion rates</strong> per module — % of active riders who completed</li>
+    <li><strong>Average quiz score</strong> per module</li>
+    <li><strong>Global leaderboard</strong> — top 50 riders by total points</li>
+    <li><strong>Badge distribution</strong> — how many riders earned each badge</li>
+    <li><strong>Onboarding readiness</strong> — % of KYC-verified riders who completed mandatory training</li>
+  </ul>
+
+  <!-- Support Module -->
+  <h3 id="admin-support">3.8 — Support Module</h3>
+  <p>The Support module is the agent workspace for managing rider support tickets from creation to resolution.</p>
+
+  <h4>3.8.1 Ticket Queue — Filters</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Filter</th><th>Options</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Status</td><td>OPEN, ASSIGNED, IN_PROGRESS, WAITING_RIDER, RESOLVED, CLOSED, ESCALATED</td><td>Focus on actionable tickets</td></tr>
+      <tr><td>Priority</td><td>LOW, MEDIUM, HIGH, CRITICAL</td><td>Triage by urgency</td></tr>
+      <tr><td>Category</td><td>VEHICLE_ISSUE, PAYMENT_ISSUE, CUSTOMER_COMPLAINT, APP_ISSUE, KYC_QUERY, GENERAL, OTHER</td><td>Route to correct team</td></tr>
+      <tr><td>Assigned To</td><td>Agent name dropdown</td><td>View a specific agent's queue</td></tr>
+      <tr><td>SLA Breached</td><td>Yes / No toggle</td><td>Find tickets that missed SLA deadlines</td></tr>
+      <tr><td>Date Range</td><td>Created from/to</td><td>Time-bounded reporting</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.8.2 Ticket Detail — Sections</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Section</th><th>Content</th><th>Actions</th></tr></thead>
+    <tbody>
+      <tr><td>Header</td><td>Ticket number, status badge, priority, SLA countdown timer</td><td>Change priority, escalate</td></tr>
+      <tr><td>Rider Info</td><td>Rider name, phone, status — quick link to rider detail</td><td>—</td></tr>
+      <tr><td>References</td><td>Linked vehicle, allotment, demand slot, or transaction (if provided at creation)</td><td>Navigate to linked entity</td></tr>
+      <tr><td>Message Thread</td><td>Chronological in-app messages (RIDER, AGENT, SYSTEM) + WhatsApp messages</td><td>Reply, attach files, add internal note</td></tr>
+      <tr><td>Assignment</td><td>Current assignee and assignment history</td><td>Assign to self or another agent; bulk-assign from queue</td></tr>
+      <tr><td>Resolution</td><td>Resolution notes, resolved_at timestamp</td><td>Mark resolved with notes</td></tr>
+      <tr><td>Rating</td><td>Rider satisfaction score (1–5 stars) — shown after resolution</td><td>—</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout info">
+    <strong>Internal Notes</strong>
+    Agents can post internal notes (is_internal=True) that are visible only to other agents, not to the rider. Use this for team handoff notes or sensitive operational details.
+  </div>
+
+  <!-- Maintenance Module -->
+  <h3 id="admin-maintenance">3.9 — Maintenance Module</h3>
+  <p>The Maintenance module tracks all vehicle service events — preventive and corrective — along with parts costs, downtime, vendor management, and compliance alerts.</p>
+
+  <h4>3.9.1 Maintenance Log — Create Form</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Required</th><th>Options</th></tr></thead>
+    <tbody>
+      <tr><td>Vehicle</td><td>Yes</td><td>Search by registration number</td></tr>
+      <tr><td>Maintenance Type</td><td>Yes</td><td>PREVENTIVE, CORRECTIVE, BATTERY_SWAP, TYRE_CHANGE, BRAKE_SERVICE, ELECTRICAL, BODY_REPAIR, INSPECTION</td></tr>
+      <tr><td>Scheduled Date</td><td>Yes</td><td>Date picker</td></tr>
+      <tr><td>Description</td><td>Yes</td><td>Free text — what was done</td></tr>
+      <tr><td>Parts Replaced</td><td>No</td><td>Dynamic list: Part name, quantity, unit cost</td></tr>
+      <tr><td>Labour Cost</td><td>Yes</td><td>INR amount</td></tr>
+      <tr><td>Odometer at Service</td><td>Yes</td><td>Current km reading</td></tr>
+      <tr><td>Next Service (km)</td><td>No</td><td>Odometer reading for next scheduled service</td></tr>
+      <tr><td>Next Service (date)</td><td>No</td><td>Calendar date for next service</td></tr>
+      <tr><td>Vendor</td><td>No</td><td>Service vendor name</td></tr>
+      <tr><td>Invoice URL</td><td>No</td><td>Upload invoice document to MinIO</td></tr>
+      <tr><td>Downtime Hours</td><td>Yes</td><td>How long vehicle was out of service</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>3.9.2 Alert Severity Levels</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Severity</th><th>Examples</th><th>Expected Response Time</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge red">CRITICAL</span></td><td>Brake failure, battery fire risk, major electrical fault</td><td>Immediate — vehicle must be taken off road</td></tr>
+      <tr><td><span class="badge amber">HIGH</span></td><td>Battery health below 60%, insurance expired, failed fitness</td><td>Same day</td></tr>
+      <tr><td><span class="badge blue">MEDIUM</span></td><td>Overdue service, tyre wear, PUC expiring in 7 days</td><td>Within 3 days</td></tr>
+      <tr><td><span class="badge gray">LOW</span></td><td>Minor body damage, interior wear, recommended check</td><td>Within 2 weeks</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 4 — RIDER MOBILE APP
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="rider-app">
+  <div class="section-pill">Section 4</div>
+  <h2>Rider Mobile App — User Manual</h2>
+  <p class="h2-sub">Complete guide to the Flutter mobile application for riders on Android and iOS.</p>
+
+  <div class="callout info">
+    <strong>Quick Start</strong>
+    Download the APK or install from the app store. For testing: use any 10-digit phone number and OTP <code>123456</code>. The app connects to the backend at <code>http://10.0.2.2:8000</code> (Android emulator) or a custom IP set via <code>API_BASE_URL</code>.
+  </div>
+
+  <!-- Auth -->
+  <h3 id="app-auth">4.1 — Authentication Flow</h3>
+  <div class="phone-grid">
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">⚡ Yana Rider</div>
+        <div class="phone-body" style="padding:24px 16px;">
+          <div style="font-size:22px;font-weight:900;color:#0f2044;margin-bottom:4px;">Welcome Back</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:24px;">Enter your mobile number to continue</div>
+          <div style="font-size:10px;font-weight:700;color:#334155;margin-bottom:4px;">PHONE NUMBER</div>
+          <div class="phone-input">+91  9876543210</div>
+          <div class="phone-btn">Send OTP</div>
+          <div style="margin-top:16px;font-size:10px;color:#64748b;text-align:center;">For testing: use OTP 123456</div>
+        </div>
+      </div>
+      <div class="phone-nav">
+        <div style="font-size:10px;color:#64748b;text-align:center;padding:4px 0;">Login Screen</div>
+      </div>
+    </div>
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">← Verify OTP</div>
+        <div class="phone-body" style="padding:24px 16px;">
+          <div style="font-size:14px;color:#64748b;margin-bottom:4px;">OTP sent to +91 9876543210</div>
+          <div style="font-size:11px;color:#94a3b8;margin-bottom:28px;">(Use 123456 for testing)</div>
+          <div style="display:flex;gap:6px;justify-content:center;margin-bottom:24px;">
+            <div style="width:32px;height:40px;border:2px solid #1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1d4ed8;">1</div>
+            <div style="width:32px;height:40px;border:2px solid #1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1d4ed8;">2</div>
+            <div style="width:32px;height:40px;border:2px solid #1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1d4ed8;">3</div>
+            <div style="width:32px;height:40px;border:2px solid #1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1d4ed8;">4</div>
+            <div style="width:32px;height:40px;border:2px solid #1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1d4ed8;">5</div>
+            <div style="width:32px;height:40px;border:2px solid #1d4ed8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#1d4ed8;">6</div>
+          </div>
+          <div class="phone-btn">Verify &amp; Login</div>
+        </div>
+      </div>
+      <div class="phone-nav">
+        <div style="font-size:10px;color:#64748b;text-align:center;padding:4px 0;">OTP Screen</div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Authentication Flow Steps</h4>
+  <div class="vworkflow">
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">1</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Enter Phone Number</h5>
+        <p>10-digit Indian mobile number. Tapping "Send OTP" calls <code>POST /api/v1/auth/rider/send-otp</code>. The auth service auto-creates a rider record if the phone is new.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">2</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>OTP Generated &amp; Sent</h5>
+        <p>Backend generates a 6-digit OTP. In development, OTP is logged to server console. In production, sent via SMS. Testing OTP: <code>123456</code>.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">3</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Enter 6-digit OTP</h5>
+        <p>Uses Pinput widget — tapping the last digit automatically triggers verification. Calls <code>POST /api/v1/auth/rider/verify-otp</code>.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle done">4</div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>Tokens Stored, Redirect to Home</h5>
+        <p>Access token and refresh token stored in <code>FlutterSecureStorage</code> (encrypted on device). Rider ID stored separately. App redirects to <code>/home</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Jobs -->
+  <h3 id="app-jobs">4.2 — Jobs / Demand Slots</h3>
+  <div class="phone-grid">
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">Available Jobs</div>
+        <div class="phone-body" style="padding:8px;">
+          <div class="phone-card">
+            <div class="pc-title">Zepto — Koramangala Dark Store</div>
+            <div class="pc-sub">Mon, 07 Apr • 06:00 AM – 02:00 PM</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+              <span style="font-size:10px;color:#64748b;">Bangalore</span>
+              <span class="pc-val">₹500</span>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div class="pc-title">Blinkit — HSR Layout Store</div>
+            <div class="pc-sub">Mon, 07 Apr • 02:00 PM – 10:00 PM</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+              <span style="font-size:10px;color:#64748b;">Bangalore</span>
+              <span class="pc-val">₹450</span>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div class="pc-title">Zomato — Indiranagar Hub</div>
+            <div class="pc-sub">Mon, 07 Apr • 10:00 PM – 06:00 AM</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+              <span style="font-size:10px;color:#64748b;">Bangalore</span>
+              <span class="pc-val">₹600</span>
+            </div>
+          </div>
+        </div>
+        <div class="phone-nav">
+          <div class="phone-nav-item"><div class="pni-icon">💳</div><div class="pni-label">Wallet</div></div>
+          <div class="phone-nav-item active"><div class="pni-icon">💼</div><div class="pni-label">Jobs</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">🎓</div><div class="pni-label">Skills</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">🎧</div><div class="pni-label">Support</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">← Job Details</div>
+        <div class="phone-body" style="padding:12px;">
+          <div style="font-size:14px;font-weight:800;color:#0f2044;margin-bottom:12px;">Zepto — Koramangala</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px;">CLIENT</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Zepto Quick Commerce</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px;">LOCATION</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;">Koramangala Dark Store</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px;">SHIFT TIME</div>
+          <div style="font-size:13px;font-weight:600;margin-bottom:10px;">06:00 AM – 02:00 PM (8 hrs)</div>
+          <div style="font-size:11px;color:#64748b;margin-bottom:4px;">PAYOUT</div>
+          <div style="font-size:20px;font-weight:900;color:#1d4ed8;margin-bottom:16px;">₹500.00</div>
+          <div class="phone-btn">Apply for this Job</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Jobs Screen — Features</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Feature</th><th>Description</th><th>API Call</th></tr></thead>
+    <tbody>
+      <tr><td>Job List</td><td>Shows all PUBLISHED demand slots visible to this rider (filtered by city, hub, score)</td><td><code>GET /api/v1/marketplace/slots/?status=PUBLISHED</code></td></tr>
+      <tr><td>Pull-to-Refresh</td><td>Swipe down to reload latest available jobs from server</td><td>Invalidates Riverpod provider</td></tr>
+      <tr><td>Job Card</td><td>Shows client name, dark store, date, shift time, payout amount</td><td>—</td></tr>
+      <tr><td>Job Detail</td><td>Tap card to view full details — location, pay structure, duration</td><td>—</td></tr>
+      <tr><td>Apply Button</td><td>Single-tap to submit application. Loading state during API call.</td><td><code>POST /api/v1/marketplace/slots/{id}/apply/</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- Wallet -->
+  <h3 id="app-wallet">4.3 — Wallet</h3>
+  <div class="phone-grid">
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">Wallet</div>
+        <div class="phone-body" style="padding:8px;">
+          <div style="background:#0f2044;border-radius:10px;padding:20px;margin-bottom:10px;text-align:center;">
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:700;text-transform:uppercase;">Available Balance</div>
+            <div style="font-size:32px;font-weight:900;color:#fff;margin:4px 0;">₹3,450.00</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;color:#334155;margin:8px 0 6px;">Transactions</div>
+          <div class="phone-card">
+            <div style="display:flex;justify-content:space-between;">
+              <div><div class="pc-title">Daily Rent</div><div class="pc-sub">07 Apr 2026</div></div>
+              <div style="color:#dc2626;font-weight:700;font-size:13px;">-₹150</div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div style="display:flex;justify-content:space-between;">
+              <div><div class="pc-title">Shift Earnings</div><div class="pc-sub">06 Apr 2026</div></div>
+              <div style="color:#059669;font-weight:700;font-size:13px;">+₹500</div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div style="display:flex;justify-content:space-between;">
+              <div><div class="pc-title">Daily Rent</div><div class="pc-sub">06 Apr 2026</div></div>
+              <div style="color:#dc2626;font-weight:700;font-size:13px;">-₹150</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-nav">
+          <div class="phone-nav-item active"><div class="pni-icon">💳</div><div class="pni-label" style="color:#1d4ed8;">Wallet</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">💼</div><div class="pni-label">Jobs</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">🎓</div><div class="pni-label">Skills</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">🎧</div><div class="pni-label">Support</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Wallet Features</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Feature</th><th>Description</th><th>API Call</th></tr></thead>
+    <tbody>
+      <tr><td>Balance Display</td><td>Large balance card showing current wallet balance in INR</td><td><code>GET /api/v1/payments/wallets/{rider_id}/</code></td></tr>
+      <tr><td>Transaction List</td><td>All ledger entries — Credits shown in green (+), Debits in red (-) with payment type and date</td><td><code>GET /api/v1/payments/wallets/{rider_id}/ledger/</code></td></tr>
+      <tr><td>Pull-to-Refresh</td><td>Swipe down to reload both balance and transaction list</td><td>Invalidates both providers</td></tr>
+      <tr><td>Credit Indicator</td><td>Green downward arrow for credits (earnings, incentives, refunds)</td><td>direction == 'C'</td></tr>
+      <tr><td>Debit Indicator</td><td>Red upward arrow for debits (daily rent, penalties, withdrawals)</td><td>direction == 'D'</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- Skills App -->
+  <h3 id="app-skills">4.4 — Skills &amp; Training</h3>
+  <div class="phone-grid">
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">Skills</div>
+        <div class="phone-body" style="padding:8px;">
+          <div class="phone-card">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:36px;height:36px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🛡️</div>
+              <div>
+                <div class="pc-title">Road Safety &amp; Traffic Rules</div>
+                <div class="pc-sub">5 videos • 45 mins</div>
+              </div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:36px;height:36px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🔋</div>
+              <div>
+                <div class="pc-title">EV Battery Care &amp; Charging</div>
+                <div class="pc-sub">3 videos • 28 mins</div>
+              </div>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="width:36px;height:36px;background:#fef3c7;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">📦</div>
+              <div>
+                <div class="pc-title">Order Delivery Best Practices</div>
+                <div class="pc-sub">4 videos • 32 mins</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-nav">
+          <div class="phone-nav-item"><div class="pni-icon">💳</div><div class="pni-label">Wallet</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">💼</div><div class="pni-label">Jobs</div></div>
+          <div class="phone-nav-item active"><div class="pni-icon">🎓</div><div class="pni-label" style="color:#1d4ed8;">Skills</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">🎧</div><div class="pni-label">Support</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Skills Features</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Feature</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Module List</td><td>All published training modules with thumbnail, title, video count and estimated duration</td></tr>
+      <tr><td>Video Player</td><td>Tap a video to expand the Chewie player inline. Auto-play starts. Progress tracked in real-time.</td></tr>
+      <tr><td>Completion Tracking</td><td>On video end, app calls <code>POST /api/v1/skills/videos/{id}/watch/</code> to credit points and mark complete</td></tr>
+      <tr><td>Quiz</td><td>If module has a quiz, it appears after last video. Multiple choice questions. Submit for instant scoring.</td></tr>
+      <tr><td>Badge Earned</td><td>On module completion, if badge criteria met, a congratulations dialog appears with badge name and icon</td></tr>
+      <tr><td>Multilingual</td><td>Titles and descriptions shown in rider's preferred language (EN/HI)</td></tr>
+    </tbody>
+  </table></div>
+
+  <!-- Support App -->
+  <h3 id="app-support">4.5 — Support</h3>
+  <div class="phone-grid">
+    <div class="phone-mockup">
+      <div class="phone-notch"><span></span></div>
+      <div class="phone-screen">
+        <div class="phone-header">Support</div>
+        <div class="phone-body" style="padding:8px;">
+          <div class="phone-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div><div class="pc-title">TKT-2026-00042</div><div class="pc-sub">Vehicle Issue • 05 Apr</div></div>
+              <span style="background:#dbeafe;color:#1e40af;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">OPEN</span>
+            </div>
+          </div>
+          <div class="phone-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div><div class="pc-title">TKT-2026-00031</div><div class="pc-sub">Payment Issue • 01 Apr</div></div>
+              <span style="background:#d1fae5;color:#065f46;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;">RESOLVED</span>
+            </div>
+          </div>
+          <div style="height:40px;"></div>
+        </div>
+        <div class="phone-nav">
+          <div class="phone-nav-item"><div class="pni-icon">💳</div><div class="pni-label">Wallet</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">💼</div><div class="pni-label">Jobs</div></div>
+          <div class="phone-nav-item"><div class="pni-icon">🎓</div><div class="pni-label">Skills</div></div>
+          <div class="phone-nav-item active"><div class="pni-icon">🎧</div><div class="pni-label" style="color:#1d4ed8;">Support</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h4>Create Ticket — Fields</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Options</th></tr></thead>
+    <tbody>
+      <tr><td>Category</td><td>Dropdown</td><td>Vehicle Issue, Payment Issue, Customer Complaint, App Issue, KYC Query, General, Other</td></tr>
+      <tr><td>Subject</td><td>Text field</td><td>Brief one-line description of the issue (max 500 chars)</td></tr>
+      <tr><td>Description</td><td>Multi-line text</td><td>Detailed explanation of the problem</td></tr>
+      <tr><td>Submit</td><td>Button</td><td>Calls <code>POST /api/v1/support/tickets/</code>. On success, returns to ticket list.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Bottom Navigation Bar</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Tab</th><th>Icon</th><th>Screen</th><th>Data Loaded</th></tr></thead>
+    <tbody>
+      <tr><td>Wallet</td><td>💳 account_balance_wallet</td><td>WalletScreen</td><td>Wallet balance + ledger entries</td></tr>
+      <tr><td>Jobs</td><td>💼 work</td><td>JobsScreen</td><td>Published demand slots</td></tr>
+      <tr><td>Skills</td><td>🎓 school</td><td>SkillsScreen</td><td>Published training modules</td></tr>
+      <tr><td>Support</td><td>🎧 headset_mic</td><td>SupportScreen</td><td>Rider's support tickets</td></tr>
+    </tbody>
+  </table></div>
+  <p>The app uses <code>IndexedStack</code> to preserve screen state when switching tabs — avoiding unnecessary API re-fetches.</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 5 — DATA ARCHITECTURE
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="data-architecture">
+  <div class="section-pill">Section 5</div>
+  <h2>Data Architecture &amp; Database Schemas</h2>
+  <p class="h2-sub">Complete schema documentation for every service, table, and field.</p>
+
+  <div class="callout note">
+    <strong>Database</strong>
+    All services share a single PostgreSQL 15 instance. Each service manages its own tables through Django migrations. UUID primary keys are used throughout for distributed-safe identifiers. Soft deletes via <code>deleted_at</code> field preserve audit history.
+  </div>
+
+  <h3 id="db-schema">5.1 — Core Tables Summary</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Table</th><th>Service</th><th>Primary Key</th><th>Key Relationships</th><th>Row Volume (est.)</th></tr></thead>
+    <tbody>
+      <tr><td>admin_users</td><td>Auth</td><td>UUID</td><td>—</td><td>Low (10–1000)</td></tr>
+      <tr><td>riders</td><td>Rider</td><td>UUID</td><td>hub, city, referred_by</td><td>Medium (1K–100K)</td></tr>
+      <tr><td>rider_documents</td><td>Rider</td><td>UUID</td><td>rider (FK)</td><td>Medium (5K–500K)</td></tr>
+      <tr><td>rider_nominees</td><td>Rider</td><td>UUID</td><td>rider (FK)</td><td>Medium</td></tr>
+      <tr><td>kyc_verification_logs</td><td>Rider</td><td>UUID</td><td>rider, document (FK)</td><td>High (append-only)</td></tr>
+      <tr><td>cities</td><td>Fleet</td><td>UUID</td><td>—</td><td>Very Low</td></tr>
+      <tr><td>fleet_hubs</td><td>Fleet</td><td>UUID</td><td>city (FK)</td><td>Low</td></tr>
+      <tr><td>vehicles</td><td>Fleet</td><td>UUID</td><td>hub (FK)</td><td>Medium</td></tr>
+      <tr><td>vehicle_allotments</td><td>Fleet</td><td>UUID</td><td>vehicle, hub (FK); rider_id</td><td>High</td></tr>
+      <tr><td>vehicle_gps_telemetry</td><td>Fleet</td><td>UUID</td><td>vehicle (FK)</td><td>Very High (partition by month)</td></tr>
+      <tr><td>rider_wallets</td><td>Payments</td><td>UUID</td><td>rider_id (unique)</td><td>= riders count</td></tr>
+      <tr><td>wallet_ledger</td><td>Payments</td><td>UUID</td><td>wallet (FK)</td><td>Very High (append-only)</td></tr>
+      <tr><td>rent_schedule</td><td>Payments</td><td>UUID</td><td>allotment_id; wallet_ledger (FK)</td><td>High</td></tr>
+      <tr><td>payment_transactions</td><td>Payments</td><td>UUID</td><td>ledger_entry (OneToOne)</td><td>High</td></tr>
+      <tr><td>clients</td><td>Marketplace</td><td>UUID</td><td>—</td><td>Low</td></tr>
+      <tr><td>demand_slots</td><td>Marketplace</td><td>UUID</td><td>client, dark_store (FK)</td><td>Medium (daily)</td></tr>
+      <tr><td>demand_applications</td><td>Marketplace</td><td>UUID</td><td>demand_slot (FK); rider_id</td><td>High</td></tr>
+      <tr><td>skill_modules</td><td>Skills</td><td>UUID</td><td>—</td><td>Very Low</td></tr>
+      <tr><td>skill_videos</td><td>Skills</td><td>UUID</td><td>module (FK)</td><td>Low</td></tr>
+      <tr><td>rider_skill_progress</td><td>Skills</td><td>UUID</td><td>rider_id; module, video (FK)</td><td>High</td></tr>
+      <tr><td>rider_badges</td><td>Skills</td><td>UUID</td><td>rider_id</td><td>Medium</td></tr>
+      <tr><td>support_tickets</td><td>Support</td><td>UUID</td><td>rider_id; assigned_to_id</td><td>High</td></tr>
+      <tr><td>ticket_messages</td><td>Support</td><td>UUID</td><td>ticket (FK)</td><td>Very High</td></tr>
+      <tr><td>maintenance_logs</td><td>Maintenance</td><td>UUID</td><td>vehicle (FK)</td><td>Medium</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>5.2 — Key Field Reference: Riders Table</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Nullable</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>id</td><td>UUID</td><td>No</td><td>Primary key — auto-generated</td></tr>
+      <tr><td>phone</td><td>varchar(15)</td><td>No</td><td>Unique — used as login identifier</td></tr>
+      <tr><td>full_name</td><td>varchar(200)</td><td>No</td><td>Legal name as per Aadhaar</td></tr>
+      <tr><td>status</td><td>varchar(30)</td><td>No</td><td>State machine: APPLIED → ACTIVE → OFFBOARDED</td></tr>
+      <tr><td>kyc_status</td><td>varchar(30)</td><td>No</td><td>PENDING → VERIFIED / REJECTED</td></tr>
+      <tr><td>hub_id</td><td>UUID</td><td>Yes</td><td>Assigned hub (set on activation)</td></tr>
+      <tr><td>city_id</td><td>UUID</td><td>Yes</td><td>Operating city</td></tr>
+      <tr><td>aadhaar_number</td><td>text (encrypted)</td><td>Yes</td><td>Encrypted at service layer before storage</td></tr>
+      <tr><td>reliability_score</td><td>decimal(3,2)</td><td>Yes</td><td>0.0–5.0 computed score used for marketplace matching</td></tr>
+      <tr><td>deleted_at</td><td>datetime</td><td>Yes</td><td>Soft delete — NULL means active record</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>5.3 — Key Field Reference: Wallet Ledger</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>payment_type</td><td>varchar</td><td>DAILY_RENT, SECURITY_DEPOSIT, INCENTIVE, PENALTY, REFUND, ADJUSTMENT, WITHDRAWAL, TOPUP, DEPOSIT_REFUND</td></tr>
+      <tr><td>amount</td><td>decimal(12,2)</td><td>Always positive — direction determines credit or debit</td></tr>
+      <tr><td>direction</td><td>varchar(1)</td><td>'C' = Credit (money in), 'D' = Debit (money out)</td></tr>
+      <tr><td>balance_after</td><td>decimal(12,2)</td><td>Wallet balance snapshot after this transaction — enables ledger audit</td></tr>
+      <tr><td>reference_id</td><td>UUID</td><td>Links to business object (allotment_id, demand_application_id, etc.)</td></tr>
+      <tr><td>accounting_date</td><td>date</td><td>IST calendar date for financial reporting (independent of created_at UTC)</td></tr>
+      <tr><td>gateway_txn_id</td><td>text</td><td>Razorpay payment ID — indexed for webhook reconciliation</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn">
+    <strong>Immutable Ledger Policy</strong>
+    The <code>wallet_ledger</code> table is append-only. No row is ever updated or deleted. Corrections are made by posting a reversal entry with payment_type=REFUND or ADJUSTMENT. This ensures a tamper-proof financial audit trail.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 6 — DATA RELATIONSHIPS
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="data-relationships">
+  <div class="section-pill">Section 6</div>
+  <h2>Data Relationships</h2>
+  <p class="h2-sub">How entities connect across services and what those connections enable.</p>
+
+  <h3>6.1 — Cross-Service Entity Map</h3>
+  <p>Because Yana OS uses microservices, cross-service references are stored as raw <strong>UUID fields</strong> (not Django ForeignKeys), allowing services to remain independently deployable. The gateway composes data when a full view is needed.</p>
+
+  <div class="table-wrap"><table>
+    <thead><tr><th>Entity A</th><th>Entity B</th><th>Relationship</th><th>How Linked</th><th>Business Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Rider</td><td>FleetHub</td><td>Many-to-One</td><td>riders.hub_id → fleet_hubs.id</td><td>A rider belongs to one hub; a hub manages many riders</td></tr>
+      <tr><td>Vehicle</td><td>FleetHub</td><td>Many-to-One</td><td>vehicles.hub_id → fleet_hubs.id</td><td>Each vehicle is assigned to a hub for management</td></tr>
+      <tr><td>VehicleAllotment</td><td>Rider</td><td>Many-to-One</td><td>allotments.rider_id (UUID field)</td><td>A rider can have at most one ACTIVE allotment at a time</td></tr>
+      <tr><td>VehicleAllotment</td><td>Vehicle</td><td>Many-to-One</td><td>allotments.vehicle_id → vehicles.id</td><td>A vehicle has one active allotment at a time (enforced by unique constraint)</td></tr>
+      <tr><td>RiderWallet</td><td>Rider</td><td>One-to-One</td><td>rider_wallets.rider_id (unique UUID)</td><td>Every active rider has exactly one wallet</td></tr>
+      <tr><td>WalletLedger</td><td>RentSchedule</td><td>One-to-One</td><td>rent_schedule.paid_ledger_id</td><td>When rent is collected, ledger entry is linked to the schedule entry</td></tr>
+      <tr><td>RentSchedule</td><td>VehicleAllotment</td><td>Many-to-One</td><td>rent_schedule.allotment_id (UUID)</td><td>Daily rent entries generated per active allotment</td></tr>
+      <tr><td>DemandApplication</td><td>DemandSlot</td><td>Many-to-One</td><td>demand_applications.demand_slot_id</td><td>Many riders apply for one slot</td></tr>
+      <tr><td>DemandApplication</td><td>Rider</td><td>Many-to-One</td><td>demand_applications.rider_id (UUID)</td><td>One rider can apply to many slots (not same slot twice — unique constraint)</td></tr>
+      <tr><td>DemandSlot</td><td>Client</td><td>Many-to-One</td><td>demand_slots.client_id</td><td>A client posts many demand slots</td></tr>
+      <tr><td>SupportTicket</td><td>Rider</td><td>Many-to-One</td><td>support_tickets.rider_id (UUID)</td><td>A rider can have many tickets over time</td></tr>
+      <tr><td>SupportTicket</td><td>Vehicle/Allotment</td><td>Optional Many-to-One</td><td>support_tickets.vehicle_id / allotment_id</td><td>Ticket can be linked to specific vehicle or allotment for context</td></tr>
+      <tr><td>RiderSkillProgress</td><td>Rider</td><td>Many-to-One</td><td>rider_skill_progress.rider_id (UUID)</td><td>Tracks each rider's per-video progress</td></tr>
+      <tr><td>RiderBadge</td><td>Rider</td><td>Many-to-One</td><td>rider_badges.rider_id (UUID)</td><td>A rider can earn multiple badges; each badge earned once</td></tr>
+      <tr><td>MaintenanceLog</td><td>Vehicle</td><td>Many-to-One</td><td>maintenance_logs.vehicle_id</td><td>Full service history per vehicle</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>6.2 — Rider 360° Data View</h3>
+  <p>The admin dashboard's rider detail view composes data from multiple services to show a complete rider profile:</p>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Data Shown</th><th>Source Service</th><th>API Call</th></tr></thead>
+    <tbody>
+      <tr><td>Profile &amp; KYC status</td><td>Rider Service</td><td><code>GET /api/v1/riders/{id}/</code></td></tr>
+      <tr><td>KYC documents &amp; logs</td><td>Rider Service</td><td><code>GET /api/v1/riders/{id}/kyc/logs/</code></td></tr>
+      <tr><td>Active vehicle allotment</td><td>Fleet Service</td><td><code>GET /api/v1/fleet/allotments/?rider_id={id}</code></td></tr>
+      <tr><td>Wallet balance &amp; ledger</td><td>Payments Service</td><td><code>GET /api/v1/payments/wallets/{id}/</code></td></tr>
+      <tr><td>Rent schedule &amp; overdue</td><td>Payments Service</td><td><code>GET /api/v1/payments/rent/{id}/schedule/</code></td></tr>
+      <tr><td>Job applications history</td><td>Marketplace Service</td><td><code>GET /api/v1/marketplace/riders/{id}/applications/</code></td></tr>
+      <tr><td>Training progress &amp; badges</td><td>Skills Service</td><td><code>GET /api/v1/skills/riders/{id}/progress/</code></td></tr>
+      <tr><td>Support tickets</td><td>Support Service</td><td><code>GET /api/v1/support/riders/{id}/tickets/</code></td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>6.3 — Data Flow: Allotment → Rent → Payment</h3>
+  <p>This shows the financial data chain triggered by a vehicle allotment:</p>
+  <div class="code-block">
+    <span class="lang-tag">FLOW</span>
+    <pre><span class="cmt">1. HUB_OPS creates allotment → VehicleAllotment created (status=ACTIVE)</span>
+<span class="key">   VehicleAllotment</span> { rider_id, vehicle_id, daily_rent_amount=150, security_deposit=2000 }
+
+<span class="cmt">2. Celery task fires → generates RentSchedule entries for 30 days</span>
+<span class="key">   RentSchedule</span> × 30 rows { allotment_id, due_date, amount=150, status=PENDING }
+
+<span class="cmt">3. Also fires → WalletLedger entry for security deposit</span>
+<span class="key">   WalletLedger</span> { payment_type=SECURITY_DEPOSIT, amount=2000, direction=D }
+
+<span class="cmt">4. Nightly Celery beat → processes due rent entries</span>
+   For each RentSchedule WHERE due_date=today AND status=PENDING:
+     → Attempt UPI autopay via Razorpay API
+     → On success:
+         <span class="key">WalletLedger</span> { payment_type=DAILY_RENT, amount=150, direction=D, balance_after=X }
+         <span class="key">PaymentTransaction</span> { status=SUCCESS, gateway_txn_id=pay_xxx }
+         <span class="key">RentSchedule</span>.status = PAID
+     → On failure:
+         <span class="key">RentSchedule</span>.status = OVERDUE, days_overdue++, penalty applied
+
+<span class="cmt">5. Vehicle returned → WalletLedger deposit refund entry</span>
+<span class="key">   WalletLedger</span> { payment_type=DEPOSIT_REFUND, amount=2000, direction=C }</pre>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 7 — DATA FLOW
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="data-flow">
+  <div class="section-pill">Section 6.5</div>
+  <h2>Data Flow Diagrams</h2>
+  <p class="h2-sub">How data moves through the system for key operations.</p>
+
+  <h3>Authentication Token Flow</h3>
+  <div class="code-block"><span class="lang-tag">SEQUENCE</span><pre>
+Rider App           Nginx Gateway       Auth Service         PostgreSQL
+    |                    |                   |                    |
+    |─── POST /send-otp ─►                  |                    |
+    |                    ├── forward ────────►                   |
+    |                    |                   ├── CREATE rider ────►
+    |                    |                   ├── STORE otp hash ──►
+    |                    |                   ◄── ok ─────────────|
+    |                    ◄── { OTP sent } ───|                    |
+    ◄── { message } ─────|                  |                    |
+    |                    |                   |                    |
+    |─── POST /verify ───►                  |                    |
+    |                    ├── forward ────────►                   |
+    |                    |                   ├── VERIFY otp ──────►
+    |                    |                   ├── GENERATE JWT ────|
+    |                    ◄── { tokens } ─────|                   |
+    ◄── { access+refresh }                  |                    |
+    | store in SecureStorage                |                    |
+    |                    |                   |                    |
+    |─── GET /wallet ────►                  |                    |
+    |  (Bearer: access)  |                   |                    |
+    |                    ├── validate JWT ───►                   |
+    |                    ├── forward to payments-service          |
+    |                    ◄── wallet data ────────────────────────|
+    ◄── { balance }──────|</pre></div>
+
+  <h3>Demand Slot Application Flow</h3>
+  <div class="code-block"><span class="lang-tag">SEQUENCE</span><pre>
+Rider App         Marketplace Service     Payments Service    Celery Worker
+    |                    |                      |                  |
+    |── GET /slots ──────►                     |                  |
+    |                    ├── filter by status=PUBLISHED           |
+    |                    ├── filter by rider city/hub             |
+    |                    ├── filter by min_reliability_score      |
+    ◄── [slot list] ─────|                     |                  |
+    |                    |                      |                  |
+    |── POST /apply ─────►                     |                  |
+    |                    ├── CREATE DemandApplication             |
+    |                    ├── run matching_score algorithm         |
+    |                    ├── notify admin queue                   |
+    ◄── { application } ─|                     |                  |
+    |                    |                      |                  |
+    |    [ADMIN confirms rider]                 |                  |
+    |                    ├── application.status = CONFIRMED       |
+    |                    ├── slot.riders_confirmed++              |
+    |                    |                      |                  |
+    |    [Shift day - Rider checks in]          |                  |
+    |── POST /check-in ──►                     |                  |
+    |                    ├── record GPS, timestamp               |
+    ◄── { ok } ──────────|                     |                  |
+    |                    |                      |                  |
+    |    [Post-shift - Rider checks out]        |                  |
+    |── POST /check-out ─►                     |                  |
+    |                    ├── application.status = COMPLETED       |
+    ◄── { ok } ──────────|                     |                  |
+    |                    |                      |                  |
+    |         [Celery nightly task]                               |
+    |                    ├────────────────────────────────── calculate_earnings
+    |                    |                      ◄── WalletLedger CREDIT
+    |                    |                      |   payment_type=INCENTIVE
+    |                    ├── application.earnings_credited = True |</pre></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 7 — BUSINESS WORKFLOWS
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="workflows">
+  <div class="section-pill">Section 7</div>
+  <h2>Business Workflows</h2>
+  <p class="h2-sub">End-to-end operational playbooks for every key business process.</p>
+
+  <!-- Onboarding -->
+  <h3 id="wf-onboarding">7.1 — Rider Onboarding Workflow</h3>
+  <p>The onboarding workflow takes a new applicant from phone registration to an ACTIVE rider eligible for vehicle allotment and demand work. It spans 4 services.</p>
+
+  <div class="vworkflow">
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">1</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Phone Registration &amp; OTP Login</h5>
+        <p>Rider enters phone number in the app. Auth service sends OTP. Rider verifies → JWT tokens issued. Rider status: <span class="badge gray">APPLIED</span></p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">2</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Profile Completion</h5>
+        <p>Rider fills name, email, DOB, gender, address, bank details via the app. Admin can also complete profile. Status: <span class="badge gray">APPLIED</span></p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">3</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Document Upload</h5>
+        <p>Upload Aadhaar (front + back), PAN, Driving License (front + back), bank passbook/cancelled cheque, profile photo. Documents stored in MinIO. Status: <span class="badge amber">DOCS_SUBMITTED</span> → <span class="badge blue">KYC_PENDING</span></p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">4</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">ADMIN</span>
+        <h5>Document Review &amp; KYC Decision</h5>
+        <p>SUPPORT_AGENT reviews each document. Can approve/reject individual documents with reason. Final KYC decision: VERIFIED or REJECTED. A rejected KYC logs the reason and notifies the rider. Status: <span class="badge blue">UNDER_REVIEW</span> → <span class="badge green">KYC_VERIFIED</span> or <span class="badge red">KYC_FAILED</span></p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">5</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Nominee Registration</h5>
+        <p>Rider adds at least one nominee (family member) with relationship, phone, and Aadhaar. Required for insurance and emergency contact purposes.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">6</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Mandatory Training</h5>
+        <p>Rider completes all mandatory skill modules in the app (road safety, EV care, delivery best practices). Must pass quizzes. Skills service marks onboarding_readiness=True. Status: <span class="badge blue">TRAINING</span></p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">7</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">ADMIN</span>
+        <h5>Rider Activation</h5>
+        <p>HUB_OPS or CITY_ADMIN verifies the rider is physically at the hub. Calls <code>POST /api/v1/riders/{id}/activate/</code>. Rider status: <span class="badge green">ACTIVE</span>. Rider is now eligible for vehicle allotment and demand slots.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">8</div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>Wallet Created</h5>
+        <p>On activation, Payments service auto-creates a <code>RiderWallet</code> with zero balance. Rider can now receive earnings and is subject to daily rent collection.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Allotment -->
+  <h3 id="wf-allotment">7.2 — Vehicle Allotment &amp; Return Workflow</h3>
+  <div class="vworkflow">
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">1</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">HUB_OPS</span>
+        <h5>Select Vehicle &amp; Rider</h5>
+        <p>HUB_OPS navigates to Fleet → Allotments → New Allotment. Selects an AVAILABLE vehicle and an ACTIVE rider without a current allotment. Enters odometer, battery %, condition notes, daily rent, and security deposit amount.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">2</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>Allotment Created — Status Changes</h5>
+        <p>VehicleAllotment created (status=ACTIVE). Vehicle status changed to ALLOCATED. Unique constraints enforced — cannot allot a vehicle already allocated or allot two vehicles to one rider simultaneously.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">3</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">CELERY</span>
+        <h5>Financial Setup</h5>
+        <p>Celery task generates 30-day RentSchedule entries. Security deposit debited from rider's wallet (or invoiced if wallet insufficient). Nightly collection begins from next calendar day.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">4</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Rider Operates Vehicle</h5>
+        <p>Rider uses the EV for daily deliveries. GPS telemetry is ingested by the fleet-telemetry FastAPI sidecar (real-time). Battery level, location, and odometer updated continuously.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">5</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">HUB_OPS</span>
+        <h5>Vehicle Return</h5>
+        <p>Calls <code>POST /api/v1/fleet/allotments/{id}/return/</code>. Records: odometer at return, battery %, condition at return, damage notes. Calculates km_driven = odometer_return − odometer_allotment. Allotment status: RETURNED. Vehicle status: AVAILABLE.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">6</div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>Deposit Refund &amp; Rent Schedule Closure</h5>
+        <p>If no damage noted: security deposit refunded to wallet (WalletLedger: DEPOSIT_REFUND, Credit). If damage: deduct damage cost from deposit, refund remainder. Future RentSchedule entries marked WAIVED. Collection stops.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demand Workflow -->
+  <h3 id="wf-demand">7.3 — Demand Slot &amp; Earnings Workflow</h3>
+  <div class="vworkflow">
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">1</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">SALES</span>
+        <h5>Create Demand Slot</h5>
+        <p>Sales team receives demand from client (e.g., Zepto needs 20 riders for tomorrow 6am–2pm at Koramangala). Creates slot: client, dark store, shift date/time, riders_required, pay_structure.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">2</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">CITY_ADMIN</span>
+        <h5>Publish Slot</h5>
+        <p>Admin reviews the slot and publishes it. Status changes DRAFT → PUBLISHED. Slot is now visible in the rider app to eligible riders (filtered by city, hub, reliability score, badges).</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">3</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Apply for Slot</h5>
+        <p>Rider views available jobs in the app, taps the Zepto slot card, reviews details (pay, timing, location), and taps "Apply". DemandApplication created with status=APPLIED. Matching engine calculates match_score.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">4</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">CITY_ADMIN</span>
+        <h5>Bulk Confirm Riders</h5>
+        <p>Admin views applications sorted by match_score. Selects top applicants and bulk-confirms them. Application status: CONFIRMED. Slot riders_confirmed incremented. When riders_confirmed = riders_required, slot status: FILLED.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">5</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Check-In at Dark Store</h5>
+        <p>Day of shift: Rider arrives at Zepto dark store, taps Check-In in app. App records timestamp and GPS coordinates. These are validated against the dark store location to prevent proxy check-ins.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">6</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Complete Shift &amp; Check-Out</h5>
+        <p>Rider completes deliveries (orders_completed tracked). At shift end, taps Check-Out. Application status: COMPLETED. hours_worked calculated. orders_completed finalized.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">7</div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">CELERY</span>
+        <h5>Earnings Calculation &amp; Payout</h5>
+        <p>Post-shift Celery task calculates earnings: PER_ORDER slots: 15 orders × ₹50 = ₹750. PER_SHIFT: flat ₹500. Credits WalletLedger (payment_type=INCENTIVE, direction=C). Updates earnings_credited=True in application.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Support Workflow -->
+  <h3 id="wf-support">7.4 — Support Ticket Workflow</h3>
+  <div class="vworkflow">
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle">1</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Create Ticket</h5>
+        <p>Rider selects category (Vehicle Issue, Payment Issue, etc.), enters subject and description. App calls <code>POST /api/v1/support/tickets/</code>. Ticket created with status=OPEN, priority=MEDIUM. Auto-assigned ticket number (TKT-YYYY-NNNNN).</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">2</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">SUPPORT_AGENT</span>
+        <h5>Ticket Assignment</h5>
+        <p>Agent sees new ticket in queue, assigns to themselves. Status: ASSIGNED. SLA timer starts. High/Critical priority tickets have shorter SLA windows (2h/4h vs 24h/48h for Low/Medium).</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">3</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">SUPPORT_AGENT</span>
+        <h5>Investigation &amp; Communication</h5>
+        <p>Agent reviews ticket with linked entities (vehicle, allotment, payment). Posts messages visible to rider. Can add internal notes (is_internal=True) for team context. Status: IN_PROGRESS.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle admin">4</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge admin">SUPPORT_AGENT</span>
+        <h5>Resolution</h5>
+        <p>Agent resolves the issue (issues refund, arranges vehicle swap, clarifies KYC). Posts resolution notes. Calls <code>POST /api/v1/support/tickets/{id}/resolve/</code>. Status: RESOLVED.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle done">5</div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge rider">RIDER</span>
+        <h5>Rating &amp; Closure</h5>
+        <p>Rider receives resolution notification, reviews, and rates satisfaction (1–5 stars). Ticket status: CLOSED. If unsatisfied, rider can escalate → Status: ESCALATED → Manager queue.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payments Workflow -->
+  <h3 id="wf-payments">7.5 — Daily Rent Collection Workflow</h3>
+  <div class="vworkflow">
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">1</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">CELERY BEAT (Nightly 00:01 IST)</span>
+        <h5>Daily Rent Collection Job Fires</h5>
+        <p>Celery beat scheduler triggers the <code>collect_daily_rents</code> task. Queries all RentSchedule entries where due_date=today AND status=PENDING.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">2</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>Check Wallet Balance &amp; UPI Mandate</h5>
+        <p>For each due entry: check if rider has active UPI mandate (razorpay_mandate_id). If mandate exists and balance sufficient → trigger Razorpay debit. If no mandate → create manual payment request.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">3</div><div class="vwf-line"></div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">RAZORPAY WEBHOOK</span>
+        <h5>Payment Gateway Callback</h5>
+        <p>Razorpay webhook fires on payment success/failure at <code>POST /api/v1/payments/webhooks/razorpay/</code>. Signature verified. On success: WalletLedger entry created, RentSchedule.status=PAID. On failure: status=OVERDUE.</p>
+      </div>
+    </div>
+    <div class="vwf-item">
+      <div class="vwf-left"><div class="vwf-circle auto">4</div></div>
+      <div class="vwf-content">
+        <span class="vwf-badge auto">SYSTEM</span>
+        <h5>Overdue Handling &amp; Penalties</h5>
+        <p>Overdue entries accumulate <code>days_overdue</code>. After 3 days: penalty applied (overdue_penalty added). After 7 days: rider flagged for suspension review. After 14 days: force-return process initiated. All actions audit-logged.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 8 — TECHNOLOGY STACK
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="tech-stack">
+  <div class="section-pill">Section 8</div>
+  <h2>Technology Stack</h2>
+  <p class="h2-sub">All frameworks, libraries, and design patterns used across the platform.</p>
+
+  <h3 id="tech-backend">8.1 — Backend Services</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Technology</th><th>Version</th><th>Usage</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>Python</td><td>3.11+</td><td>All backend services</td><td>Rich ecosystem, type hints, async support</td></tr>
+      <tr><td>Django</td><td>4.2 LTS</td><td>7 of 8 services</td><td>Battle-tested ORM, admin, migrations — LTS ensures 2-year security support</td></tr>
+      <tr><td>Django REST Framework</td><td>3.14</td><td>All Django services</td><td>API views, serializers, authentication, pagination</td></tr>
+      <tr><td>FastAPI</td><td>0.109</td><td>fleet-telemetry only</td><td>High-throughput async I/O for GPS ingestion; WebSocket support</td></tr>
+      <tr><td>Celery</td><td>5.3</td><td>All services</td><td>Async task queue for OTP, rent collection, earnings payout, compliance checks</td></tr>
+      <tr><td>Redis</td><td>7</td><td>Celery broker + cache</td><td>Low-latency message queue; token caching; rate limiting counters</td></tr>
+      <tr><td>PostgreSQL</td><td>15</td><td>All services</td><td>ACID compliance, UUID support, JSON fields, partition support (for GPS telemetry)</td></tr>
+      <tr><td>MinIO</td><td>Latest</td><td>File storage</td><td>S3-compatible, self-hosted, on-prem data sovereignty for KYC documents</td></tr>
+      <tr><td>drf-spectacular</td><td>0.27</td><td>All services</td><td>Auto-generates OpenAPI 3.0 docs — accessible at <code>/api/docs/</code> per service</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Backend Architectural Patterns</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Pattern</th><th>Description</th><th>Applied In</th></tr></thead>
+    <tbody>
+      <tr><td>Soft Deletes</td><td><code>deleted_at</code> field on all core entities. No hard deletes in production. Queries filter WHERE deleted_at IS NULL.</td><td>All services</td></tr>
+      <tr><td>Audit Trail</td><td>Immutable log tables for status/decision changes: <code>KYCVerificationLog</code>, <code>VehicleStatusAudit</code>, <code>DemandSlotAudit</code></td><td>Rider, Fleet, Marketplace</td></tr>
+      <tr><td>Immutable Ledger</td><td>Append-only financial ledger. No UPDATE/DELETE on ledger rows. Corrections via reversal entries.</td><td>Payments</td></tr>
+      <tr><td>Optimistic Locking</td><td><code>version</code> field on RiderWallet prevents concurrent balance corruption in multi-worker Celery environment</td><td>Payments</td></tr>
+      <tr><td>Encryption at Rest</td><td>Sensitive PII (Aadhaar, PAN, bank account) encrypted at service layer using symmetric key before writing to DB</td><td>Rider, Fleet</td></tr>
+      <tr><td>UUID Primary Keys</td><td>All tables use UUID v4 PKs for distributed-safe generation without sequence locks</td><td>All services</td></tr>
+      <tr><td>Standardized Response</td><td>All endpoints return <code>{success, data}</code> or <code>{success:false, error:{message, code}}</code></td><td>All services</td></tr>
+      <tr><td>Role-Based Access Control</td><td>JWT payload includes <code>role</code> and <code>city_id</code>/<code>hub_id</code>. Each view checks permissions before proceeding.</td><td>Auth + all services</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="tech-frontend">8.2 — Admin Dashboard (React)</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Technology</th><th>Version</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td>React</td><td>18.2</td><td>UI framework — hooks-based functional components throughout</td></tr>
+      <tr><td>Vite</td><td>5.1</td><td>Build tool — HMR for dev, optimized bundle for production</td></tr>
+      <tr><td>Tailwind CSS</td><td>3.4</td><td>Utility-first styling — no custom CSS files needed</td></tr>
+      <tr><td>React Router DOM</td><td>6.22</td><td>Client-side routing with protected route guards</td></tr>
+      <tr><td>Axios</td><td>1.6</td><td>HTTP client with interceptors for auth token injection &amp; refresh</td></tr>
+      <tr><td>Recharts</td><td>2.12</td><td>Revenue charts, fleet status donuts, hub utilization bars</td></tr>
+      <tr><td>TanStack Table</td><td>8.13</td><td>Paginated, sortable, filterable data tables</td></tr>
+      <tr><td>Lucide React</td><td>0.344</td><td>Icon library — consistent iconography throughout</td></tr>
+      <tr><td>React Hot Toast</td><td>2.4</td><td>Non-blocking success/error notification toasts</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Frontend Architecture</h4>
+  <ul>
+    <li><strong>State:</strong> React Context API + <code>useState</code>/<code>useEffect</code> hooks. No Redux needed at current scale.</li>
+    <li><strong>Auth State:</strong> JWT tokens in <code>localStorage</code>. Axios interceptor attaches Bearer token to every request. On 401, auto-refresh attempted. On refresh failure, redirect to login.</li>
+    <li><strong>Routing:</strong> Protected routes redirect unauthenticated users to <code>/login</code>. Role-based menu items hidden via role check in context.</li>
+    <li><strong>Data Fetching:</strong> Axios calls in <code>useEffect</code> with cleanup for stale request cancellation.</li>
+    <li><strong>Forms:</strong> Controlled components with local state. Validation before submission.</li>
+  </ul>
+
+  <h3>8.3 — Rider Mobile App (Flutter)</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Technology</th><th>Version</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td>Flutter</td><td>3.41.5</td><td>Cross-platform mobile framework (Android + iOS from single codebase)</td></tr>
+      <tr><td>Dart</td><td>3.11.3</td><td>Programming language — strong typed, null-safe</td></tr>
+      <tr><td>flutter_riverpod</td><td>2.5.1</td><td>State management — providers for auth, wallet, jobs, skills, support</td></tr>
+      <tr><td>riverpod_annotation</td><td>2.3.5</td><td>Code generation annotations (@riverpod, @Riverpod)</td></tr>
+      <tr><td>build_runner</td><td>2.4.9</td><td>Generates <code>.g.dart</code> files for providers and models</td></tr>
+      <tr><td>freezed</td><td>2.5.2</td><td>Immutable model classes with copyWith, equality, serialization</td></tr>
+      <tr><td>json_serializable</td><td>6.8.0</td><td>Generates <code>fromJson</code>/<code>toJson</code> methods</td></tr>
+      <tr><td>dio</td><td>5.4.3</td><td>HTTP client with interceptors for JWT injection and silent token refresh</td></tr>
+      <tr><td>go_router</td><td>14.1.4</td><td>Declarative routing with auth redirect guard at <code>/login</code></td></tr>
+      <tr><td>flutter_secure_storage</td><td>9.0.0</td><td>Encrypted keychain storage for access/refresh tokens</td></tr>
+      <tr><td>video_player + chewie</td><td>2.8.6 / 1.8.1</td><td>In-app video playback for training content</td></tr>
+      <tr><td>pinput</td><td>3.0.1</td><td>OTP input field with auto-submit on 6th digit</td></tr>
+      <tr><td>cached_network_image</td><td>3.3.1</td><td>Profile photos and module thumbnails with LRU disk cache</td></tr>
+      <tr><td>intl</td><td>0.19.0</td><td>Date/currency formatting — INR with ₹ symbol, locale-aware dates</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>App Architecture (MVVM with Riverpod)</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Layer</th><th>Files</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td>View (UI)</td><td><code>lib/features/*/screens/*.dart</code></td><td>Flutter widgets. ConsumerWidget/ConsumerStatefulWidget. Only UI logic.</td></tr>
+      <tr><td>Provider (ViewModel)</td><td><code>lib/features/*/providers/*.dart</code></td><td>Riverpod providers. Orchestrates repository calls. Holds async state.</td></tr>
+      <tr><td>Repository (Data)</td><td><code>lib/features/*/data/*.dart</code></td><td>Dio HTTP calls. Maps JSON to models. One class per feature.</td></tr>
+      <tr><td>Models</td><td><code>lib/features/*/models/*.dart</code></td><td>Plain Dart classes with fromJson factories. Optional freezed for complex models.</td></tr>
+      <tr><td>Core</td><td><code>lib/core/</code></td><td>Dio client (auth interceptor), TokenStorage, AppConstants, AppRouter</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 9 — INFRASTRUCTURE
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="tech-infra">
+  <div class="section-pill">Section 9</div>
+  <h2>Infrastructure &amp; Deployment</h2>
+  <p class="h2-sub">Docker, Kubernetes, and operational setup guide.</p>
+
+  <h3 id="local-setup">9.1 — Local Development Setup</h3>
+
+  <h4>Prerequisites</h4>
+  <ul>
+    <li>Docker Desktop 24+ with Docker Compose v2</li>
+    <li>Flutter SDK 3.41+ (for mobile app development)</li>
+    <li>Node.js 20+ (for admin dashboard development)</li>
+    <li>Android Studio / Xcode (for mobile emulators)</li>
+  </ul>
+
+  <h4>Start the Backend Stack</h4>
+  <div class="code-block"><span class="lang-tag">BASH</span><pre><span class="cmt"># Clone repository</span>
+git clone https://github.com/anirudhasi/yana-osV1.0.git
+cd yana-osV1.0
+
+<span class="cmt"># Start core services (auth, rider, fleet, payments, marketplace, nginx)</span>
+docker compose up --build
+
+<span class="cmt"># Start optional services (skills, support, maintenance)</span>
+docker compose --profile optional up --build
+
+<span class="cmt"># Start with admin dashboard</span>
+docker compose --profile optional --profile ui up --build
+
+<span class="cmt"># View logs for a specific service</span>
+docker compose logs -f auth-service
+
+<span class="cmt"># Run database migrations (auto-run on startup)</span>
+docker compose exec rider-service python manage.py migrate
+
+<span class="cmt"># Create superuser (if needed)</span>
+docker compose exec auth-service python manage.py createsuperuser</pre></div>
+
+  <h4>Service URLs (After docker compose up)</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Service</th><th>URL</th><th>Credentials</th></tr></thead>
+    <tbody>
+      <tr><td>Admin Dashboard</td><td>http://localhost:3000</td><td>admin@yana.in / Admin@123</td></tr>
+      <tr><td>API Gateway</td><td>http://localhost:8000</td><td>—</td></tr>
+      <tr><td>Swagger Docs (Auth)</td><td>http://localhost:8001/api/docs/</td><td>—</td></tr>
+      <tr><td>Swagger Docs (Rider)</td><td>http://localhost:8002/api/docs/</td><td>—</td></tr>
+      <tr><td>MinIO Console</td><td>http://localhost:9001</td><td>yana_admin / yana_secret_2024</td></tr>
+      <tr><td>PostgreSQL</td><td>localhost:5432</td><td>yana / yana_pass (internal)</td></tr>
+      <tr><td>Redis</td><td>localhost:6379</td><td>No auth (internal)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Start the Mobile App</h4>
+  <div class="code-block"><span class="lang-tag">BASH</span><pre><span class="cmt"># From the rider-app directory</span>
+cd rider-app
+
+<span class="cmt"># Install dependencies</span>
+flutter pub get
+
+<span class="cmt"># Generate provider/model code</span>
+dart run build_runner build --delete-conflicting-outputs
+
+<span class="cmt"># Run on Android emulator (uses 10.0.2.2 to reach host)</span>
+flutter run
+
+<span class="cmt"># Run on physical device (replace with your machine's LAN IP)</span>
+flutter run --dart-define=API_BASE_URL=http://192.168.1.100:8000
+
+<span class="cmt"># Run on specific device</span>
+flutter devices
+flutter run -d emulator-5554
+
+<span class="cmt"># Build release APK</span>
+flutter build apk --release</pre></div>
+
+  <h4>Start the Admin Dashboard (Development)</h4>
+  <div class="code-block"><span class="lang-tag">BASH</span><pre>cd admin-dashboard
+npm install
+npm run dev   <span class="cmt"># Starts at http://localhost:3000 with HMR</span>
+npm run build <span class="cmt"># Production build to dist/</span></pre></div>
+
+  <h4>Docker Compose Service Profiles</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Profile</th><th>Services Included</th><th>Use When</th></tr></thead>
+    <tbody>
+      <tr><td>(default / no profile)</td><td>postgres, redis, minio, auth, rider, fleet, payments, marketplace, nginx + their celery workers</td><td>Core platform development and testing</td></tr>
+      <tr><td>optional</td><td>maintenance, skills, support + their celery workers</td><td>Full feature set including training and support</td></tr>
+      <tr><td>ui</td><td>admin-dashboard</td><td>Running the React dashboard in a container</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 id="kubernetes">9.2 — Kubernetes Deployment</h3>
+  <p>Production deployment uses Kubernetes manifests in the <code>/k8s/</code> directory and a Helm chart in <code>/helm/</code>.</p>
+
+  <h4>Kubernetes Resources</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Resource Type</th><th>Count</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>Deployments</td><td>16+</td><td>One per service + one per Celery worker + beat schedulers</td></tr>
+      <tr><td>Services</td><td>10+</td><td>ClusterIP for internal service discovery; LoadBalancer for nginx</td></tr>
+      <tr><td>ConfigMaps</td><td>8+</td><td>Environment variables per service (DB URL, Redis URL, etc.)</td></tr>
+      <tr><td>Secrets</td><td>5+</td><td>DB password, Redis auth, MinIO credentials, JWT secret keys, Razorpay keys</td></tr>
+      <tr><td>Ingress</td><td>1</td><td>Nginx Ingress Controller with rate limiting, TLS termination</td></tr>
+      <tr><td>PersistentVolumeClaims</td><td>3</td><td>postgres-data, redis-data, minio-data</td></tr>
+      <tr><td>HorizontalPodAutoscaler</td><td>8</td><td>Auto-scale services based on CPU (target 70%)</td></tr>
+      <tr><td>ServiceAccounts / RBAC</td><td>Configured</td><td>Least-privilege access within cluster</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Deploy with Helm</h4>
+  <div class="code-block"><span class="lang-tag">BASH</span><pre><span class="cmt"># Install / upgrade the Yana OS Helm chart</span>
+helm upgrade --install yana-os ./helm \
+  --set global.dbPassword=your_secure_password \
+  --set global.jwtSecret=your_jwt_secret \
+  --set payments.razorpayKey=rzp_live_xxx \
+  --namespace yana --create-namespace
+
+<span class="cmt"># Check rollout status</span>
+kubectl rollout status deployment/auth-service -n yana
+
+<span class="cmt"># View all pods</span>
+kubectl get pods -n yana</pre></div>
+
+  <h4>CI/CD Pipeline</h4>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Stage</th><th>Action</th><th>Tool</th></tr></thead>
+    <tbody>
+      <tr><td>Lint</td><td>Python flake8, Dart flutter analyze</td><td>GitHub Actions</td></tr>
+      <tr><td>Test</td><td>pytest (backend), flutter test (app)</td><td>GitHub Actions</td></tr>
+      <tr><td>Build</td><td>Docker image build per service</td><td>GitHub Actions</td></tr>
+      <tr><td>Push</td><td>Push images to container registry (GHCR/ECR)</td><td>GitHub Actions</td></tr>
+      <tr><td>Deploy</td><td>helm upgrade on tag push; canary on PR</td><td>Argo CD / GitHub Actions</td></tr>
+    </tbody>
+  </table></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  SECTION 10 — API GATEWAY
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap" id="api-gateway">
+  <div class="section-pill">Section 10</div>
+  <h2>API Gateway &amp; Routing</h2>
+  <p class="h2-sub">How Nginx routes requests, enforces rate limits, and handles special protocols.</p>
+
+  <h3>10.1 — Route Table</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>URL Prefix</th><th>Upstream Service</th><th>Port</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/v1/auth/</code></td><td>auth-service</td><td>8001</td><td>JWT login, OTP, token refresh</td></tr>
+      <tr><td><code>/api/v1/riders/</code></td><td>rider-service</td><td>8002</td><td>Rider CRUD, KYC, documents, nominees</td></tr>
+      <tr><td><code>/api/v1/fleet/</code></td><td>fleet-service</td><td>8003</td><td>Vehicles, hubs, allotments, GPS history</td></tr>
+      <tr><td><code>/api/v1/payments/</code></td><td>payments-service</td><td>8004</td><td>Wallets, ledger, rent, transactions</td></tr>
+      <tr><td><code>/api/v1/marketplace/</code></td><td>marketplace-service</td><td>8005</td><td>Clients, demand slots, applications</td></tr>
+      <tr><td><code>/api/v1/maintenance/</code></td><td>maintenance-service</td><td>8006</td><td>Maintenance logs and alerts</td></tr>
+      <tr><td><code>/api/v1/skills/</code></td><td>skills-service</td><td>8007</td><td>Modules, videos, progress, badges</td></tr>
+      <tr><td><code>/api/v1/support/</code></td><td>support-service</td><td>8008</td><td>Tickets, messages, analytics</td></tr>
+      <tr><td><code>/telemetry/</code></td><td>fleet-telemetry (FastAPI)</td><td>8013</td><td>High-throughput GPS ingestion</td></tr>
+      <tr><td><code>/ws/</code></td><td>fleet-telemetry (WebSocket)</td><td>8013</td><td>Real-time GPS WebSocket feed</td></tr>
+      <tr><td><code>/demo/</code></td><td>Static files</td><td>—</td><td>Browser demo UI</td></tr>
+      <tr><td><code>/health</code></td><td>Nginx internal</td><td>—</td><td>Gateway health check for load balancers</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>10.2 — Rate Limiting</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Endpoint</th><th>Limit</th><th>Scope</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/v1/auth/rider/send-otp</code></td><td>5 req/min</td><td>Per IP</td><td>OTP spam prevention — prevents mass phone number enumeration</td></tr>
+      <tr><td>All other <code>/api/v1/</code></td><td>100 req/min</td><td>Per IP</td><td>General API abuse prevention</td></tr>
+      <tr><td><code>/telemetry/</code></td><td>500 req/min</td><td>Per IP</td><td>High-frequency GPS push from IoT devices</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>10.3 — Request Headers</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Header</th><th>Value</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Authorization</td><td>Bearer &lt;JWT token&gt;</td><td>Every authenticated request must include this</td></tr>
+      <tr><td>Content-Type</td><td>application/json</td><td>All POST/PATCH/PUT requests</td></tr>
+      <tr><td>X-Real-IP</td><td>Set by Nginx</td><td>Client's real IP forwarded to services for audit logging</td></tr>
+      <tr><td>X-Forwarded-For</td><td>Set by Nginx</td><td>Full proxy chain for services behind multiple proxies</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>10.4 — Nginx Configuration Highlights</h3>
+  <div class="code-block"><span class="lang-tag">NGINX</span>
+<pre><span class="cmt"># Max upload size (for KYC document uploads)</span>
+client_max_body_size 20M;
+
+<span class="cmt"># Timeouts</span>
+proxy_connect_timeout 30s;
+proxy_read_timeout    60s;   <span class="cmt"># 60s for long-running report queries</span>
+
+<span class="cmt"># WebSocket upgrade for fleet telemetry</span>
+location /ws/ {
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_pass http://fleet-telemetry:8013;
+}</pre></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+  APPENDIX
+══════════════════════════════════════════════════════════ -->
+<div class="section-wrap">
+  <div class="section-pill">Appendix</div>
+  <h2>Reference: Status Enumerations</h2>
+  <p class="h2-sub">All system-wide status values and their meanings.</p>
+
+  <h3>Rider Status State Machine</h3>
+  <div class="workflow" style="flex-wrap:wrap;gap:8px;">
+    <div class="wf-step" style="min-width:90px;">
+      <div class="wf-circle" style="width:40px;height:40px;font-size:14px;">A</div>
+      <div class="wf-label">APPLIED</div>
+    </div>
+    <div class="wf-step" style="min-width:90px;">
+      <div class="wf-circle" style="width:40px;height:40px;font-size:14px;">D</div>
+      <div class="wf-label">DOCS_SUBMITTED</div>
+    </div>
+    <div class="wf-step" style="min-width:90px;">
+      <div class="wf-circle warn" style="width:40px;height:40px;font-size:14px;">K</div>
+      <div class="wf-label">KYC_PENDING</div>
+    </div>
+    <div class="wf-step" style="min-width:90px;">
+      <div class="wf-circle admin" style="width:40px;height:40px;font-size:14px;">V</div>
+      <div class="wf-label">VERIFIED</div>
+    </div>
+    <div class="wf-step" style="min-width:90px;">
+      <div class="wf-circle" style="width:40px;height:40px;font-size:14px;">T</div>
+      <div class="wf-label">TRAINING</div>
+    </div>
+    <div class="wf-step" style="min-width:90px;">
+      <div class="wf-circle done" style="width:40px;height:40px;font-size:14px;">✓</div>
+      <div class="wf-label">ACTIVE</div>
+    </div>
+  </div>
+
+  <h3>All Enumerations Reference</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Enum Group</th><th>Values</th></tr></thead>
+    <tbody>
+      <tr><td>Rider Status</td><td>APPLIED → DOCS_SUBMITTED → KYC_PENDING → KYC_FAILED → VERIFIED → TRAINING → ACTIVE → SUSPENDED → OFFBOARDED</td></tr>
+      <tr><td>KYC Status</td><td>PENDING → SUBMITTED → UNDER_REVIEW → VERIFIED / REJECTED</td></tr>
+      <tr><td>Admin Roles</td><td>SUPER_ADMIN, CITY_ADMIN, HUB_OPS, SALES, SUPPORT_AGENT, VIEWER</td></tr>
+      <tr><td>Vehicle Status</td><td>AVAILABLE, ALLOCATED, MAINTENANCE, RETIRED, LOST</td></tr>
+      <tr><td>Allotment Status</td><td>ACTIVE, RETURNED, FORCE_RETURNED, EXPIRED</td></tr>
+      <tr><td>Demand Slot Status</td><td>DRAFT, PUBLISHED, PARTIALLY_FILLED, FILLED, EXPIRED, CANCELLED</td></tr>
+      <tr><td>Application Status</td><td>APPLIED, SHORTLISTED, CONFIRMED, REJECTED, WITHDRAWN, NO_SHOW, COMPLETED</td></tr>
+      <tr><td>Shift Type</td><td>MORNING (6am-2pm), AFTERNOON (2pm-10pm), NIGHT (10pm-6am), CUSTOM</td></tr>
+      <tr><td>Pay Structure</td><td>PER_ORDER, PER_SHIFT, PER_HOUR, HYBRID</td></tr>
+      <tr><td>Payment Type</td><td>DAILY_RENT, SECURITY_DEPOSIT, INCENTIVE, PENALTY, REFUND, ADJUSTMENT, WITHDRAWAL, TOPUP, DEPOSIT_REFUND</td></tr>
+      <tr><td>Transaction Status</td><td>PENDING, PROCESSING, SUCCESS, FAILED, REVERSED</td></tr>
+      <tr><td>Ledger Direction</td><td>C (Credit — money in), D (Debit — money out)</td></tr>
+      <tr><td>Rent Schedule Status</td><td>PENDING, PAID, OVERDUE, WAIVED, PARTIAL</td></tr>
+      <tr><td>Ticket Status</td><td>OPEN, ASSIGNED, IN_PROGRESS, WAITING_RIDER, RESOLVED, CLOSED, ESCALATED</td></tr>
+      <tr><td>Ticket Priority</td><td>LOW, MEDIUM, HIGH, CRITICAL</td></tr>
+      <tr><td>Ticket Category</td><td>VEHICLE_ISSUE, PAYMENT_ISSUE, CUSTOMER_COMPLAINT, APP_ISSUE, KYC_QUERY, GENERAL, OTHER</td></tr>
+      <tr><td>Sender Type</td><td>RIDER, AGENT, SYSTEM</td></tr>
+      <tr><td>Badge Codes</td><td>SAFETY_FIRST, SPEED_DEMON, CONSISTENT, VETERAN, TOP_EARNER, QUICK_LEARNER, COMPLIANT</td></tr>
+      <tr><td>Alert Severity</td><td>LOW, MEDIUM, HIGH, CRITICAL</td></tr>
+      <tr><td>Maintenance Type</td><td>PREVENTIVE, CORRECTIVE, BATTERY_SWAP, TYRE_CHANGE, BRAKE_SERVICE, ELECTRICAL, BODY_REPAIR, INSPECTION</td></tr>
+      <tr><td>Maintenance Status</td><td>SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED</td></tr>
+      <tr><td>Document Type</td><td>AADHAAR_FRONT, AADHAAR_BACK, PAN, DRIVING_LICENSE_FRONT, DRIVING_LICENSE_BACK, BANK_PASSBOOK, CANCELLED_CHEQUE, PROFILE_PHOTO, OTHER</td></tr>
+      <tr><td>Payment Gateway</td><td>razorpay, cashfree, upi_autopay, manual</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Seeded Test Accounts</h3>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Email</th><th>Password</th><th>Role</th><th>Use For</th></tr></thead>
+    <tbody>
+      <tr><td>admin@yana.in</td><td>Admin@123</td><td>SUPER_ADMIN</td><td>Full platform access — all modules</td></tr>
+      <tr><td>ops@yana.in</td><td>Ops@123</td><td>HUB_OPS</td><td>Fleet operations — allotments, returns, maintenance</td></tr>
+      <tr><td>sales@yana.in</td><td>Sales@123</td><td>SALES</td><td>Client and demand slot management</td></tr>
+    </tbody>
+  </table></div>
+  <p>Rider app testing: Any 10-digit phone number with OTP <code>123456</code></p>
+
+  <hr>
+  <p style="text-align:center;color:var(--gray-400);font-size:12px;padding-top:20px;">
+    Yana OS v1.0 — Product Documentation &nbsp;|&nbsp; Generated April 2026 &nbsp;|&nbsp; Confidential &amp; Proprietary<br>
+    To save as PDF: Open in Chrome → File → Print → Destination: Save as PDF → Pages: All → Save
+  </p>
+</div>
+
+</main>
+</body>
+</html>
