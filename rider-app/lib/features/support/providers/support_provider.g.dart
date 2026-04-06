@@ -6,9 +6,7 @@ part of 'support_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$supportTicketsHash() => r'support_tickets_provider_hash';
-String _$supportCategoriesHash() => r'support_categories_provider_hash';
-String _$createTicketHash() => r'create_ticket_notifier_hash';
+String _$supportTicketsHash() => r'3714ef05e0d4c43230f4a6690ea9a08699d1142f';
 
 /// See also [supportTickets].
 @ProviderFor(supportTickets)
@@ -24,7 +22,9 @@ final supportTicketsProvider =
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
 typedef SupportTicketsRef = AutoDisposeFutureProviderRef<List<SupportTicket>>;
+String _$supportCategoriesHash() => r'a20d2f3daf9e003b8d9daf446cd970c322f23a3c';
 
 /// See also [supportCategories].
 @ProviderFor(supportCategories)
@@ -40,8 +40,10 @@ final supportCategoriesProvider =
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
-typedef SupportCategoriesRef =
-    AutoDisposeFutureProviderRef<List<SupportCategory>>;
+// ignore: unused_element
+typedef SupportCategoriesRef
+    = AutoDisposeFutureProviderRef<List<SupportCategory>>;
+String _$createTicketHash() => r'6aa1bb89df1a280bae0e89a3502313caec6707e9';
 
 /// See also [CreateTicket].
 @ProviderFor(CreateTicket)
@@ -49,11 +51,12 @@ final createTicketProvider = AutoDisposeNotifierProvider<CreateTicket,
     AsyncValue<SupportTicket?>>.internal(
   CreateTicket.new,
   name: r'createTicketProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$createTicketHash,
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$createTicketHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 typedef _$CreateTicket = AutoDisposeNotifier<AsyncValue<SupportTicket?>>;
+// ignore_for_file: type=lint
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

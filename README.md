@@ -1,20 +1,31 @@
-# Yana OS — Backend Foundation
+# Yana OS — Platform Monorepo
 
-Production-grade monorepo backend for the Yana OS Rider + Fleet + Demand platform.
+Production-grade monorepo for the Yana OS rider onboarding, fleet operations, payments, marketplace, support, and admin tooling stack.
 
 ## Architecture
 
-```
+```text
 yana-os/
-├── admin-dashboard/       # React admin dashboard for ops and analytics
-├── api-gateway/           # Nginx reverse proxy config
-├── docker/                # DB init scripts
-├── docker-compose.yml     # Full local stack
-├── services/
-│   ├── auth-service/      # Django — Admin JWT + Rider OTP auth
-│   └── rider-service/     # Django — Full rider onboarding + KYC
-└── shared/
-    └── constants/         # Shared enums and constants
+|-- admin-dashboard/            # React/Vite admin dashboard
+|-- api-gateway/                # Nginx gateway + browser demo UI
+|-- docker/                     # Postgres init scripts
+|-- docker-compose.yml          # Local orchestration for infra, APIs, workers, UI
+|-- services/
+|   |-- auth-service/           # Admin JWT + rider OTP auth
+|   |-- rider-service/          # Rider onboarding, KYC, documents, nominees
+|   |-- fleet-service/          # Hubs, vehicles, allotments, telemetry
+|   |-- payments-service/       # Wallets, rent schedules, ledger, webhooks
+|   |-- marketplace-service/    # Demand slots, applications, attendance, earnings
+|   |-- maintenance-service/    # Work orders, costs, maintenance summaries
+|   |-- skills-service/         # Learning catalog, progress, badges
+|   |-- support-service/        # Tickets, categories, escalations
+|-- shared/                     # Shared constants and utilities
+|-- API_TESTING.sh              # Auth + rider smoke flows
+|-- FLEET_API_TESTING.sh        # Fleet API smoke flows
+|-- PAYMENTS_API_TESTING.sh     # Payments API smoke flows
+|-- MARKETPLACE_API_TESTING.sh  # Marketplace API smoke flows
+|-- RAILWAY.md                  # Railway/Netlify deployment notes
+`-- render.yaml                 # Render blueprint
 ```
 
 ## Services
@@ -35,6 +46,14 @@ yana-os/
 | postgres      | 5432 | PG 15  | Primary relational DB                     |
 | redis         | 6379 | Redis  | OTP storage, Celery broker, cache         |
 | minio         | 9000 | MinIO  | S3-compatible document storage            |
+
+## Compose Profiles
+
+The Docker Compose stack is split into three practical layers:
+
+- Core default stack: `postgres`, `redis`, `minio`, `auth-service`, `rider-service`, `rider-celery`, `fleet-service`, `fleet-celery`, `fleet-telemetry`, `payments-service`, `payments-celery`, `marketplace-service`, `marketplace-celery`, and `nginx`
+- Optional profile (`optional`): `maintenance-service`, `maintenance-celery`, `skills-service`, `skills-celery`, `support-service`, and `support-celery`
+- UI profile (`ui`): `admin-dashboard`
 
 ## Quick Start
 
@@ -60,7 +79,8 @@ Wait for all services to be healthy (~60 seconds on first run).
 
 Note:
 - This repo uses gateway port `8081` locally because `8000` was already occupied on this machine by another project.
-- The default compose stack starts the core services and gateway. Optional services can be included with `--profile optional`, and the React admin dashboard can be included with `--profile ui`.
+- The default compose stack starts the core services, background workers, and gateway.
+- Optional services can be included with `--profile optional`, and the React admin dashboard can be included with `--profile ui`.
 
 Examples:
 ```bash
@@ -80,6 +100,13 @@ docker compose --profile ui up -d
 docker compose --profile optional --profile ui up -d
 ```
 
+For local dashboard development without Docker:
+```bash
+npm.cmd --prefix admin-dashboard run dev
+```
+
+That starts the Vite dev server for the admin UI. The Docker `ui` profile serves the built static bundle from `admin-dashboard/dist`.
+
 ### 3. Verify services
 ```bash
 curl http://localhost:8001/health/   # auth service
@@ -95,12 +122,13 @@ curl http://localhost:8081/health/   # nginx gateway
 
 Optional frontend:
 ```bash
-open http://localhost:3000
+http://localhost:3000
 ```
 
 UI profile note:
 - The `ui` profile now packages the prebuilt static files from `admin-dashboard/dist` into the Docker image by default.
 - If you change dashboard source files, rerun `npm.cmd --prefix admin-dashboard run build` before `docker compose --profile ui up -d --build`.
+- The browser demo UI remains available from the gateway at `http://localhost:8081/demo/index.html`.
 
 ### 4. Seeded admin users
 | Email            | Password   | Role        |
@@ -325,6 +353,18 @@ docker exec yana_skills python manage.py test tests --verbosity=2
 docker exec yana_support python manage.py test tests --verbosity=2
 ```
 
+Helper smoke-test scripts in the repo root:
+
+```bash
+API_TESTING.sh
+FLEET_API_TESTING.sh
+PAYMENTS_API_TESTING.sh
+MARKETPLACE_API_TESTING.sh
+```
+
+Note:
+- Some older script comments still refer to gateway port `8000`; the current local gateway port in this repo is `8081`.
+
 ---
 
 ## Local Validation
@@ -397,18 +437,26 @@ This repo still includes a Render Blueprint in `render.yaml`, but Railway + Netl
 
 ---
 
-## Celery Worker
+## Celery Workers
 
-The Celery worker (yana_rider_celery) runs automatically with docker compose.
+The compose stack starts background workers automatically for services that use async or scheduled tasks:
 
-Background tasks:
+- `yana_rider_celery`
+- `yana_fleet_celery`
+- `yana_payments_celery`
+- `yana_marketplace_celery`
+- `yana_maintenance_celery` when `--profile optional` is enabled
+- `yana_skills_celery` when `--profile optional` is enabled
+- `yana_support_celery` when `--profile optional` is enabled
+
+Examples of rider background tasks:
 - `run_kyc_verification(rider_id)` — Auto-verify Aadhaar/PAN/DL/Bank via mock APIs
 - `send_kyc_approved_notification(rider_id)` — WhatsApp/Firebase notification stub
 - `send_kyc_rejected_notification(rider_id, reason)` — Rejection notification
 - `send_activation_notification(rider_id)` — Activation notification
-- `trigger_kyc_verification_for_submitted()` — Periodic: process all SUBMITTED riders
+- `trigger_kyc_verification_for_submitted()` — Periodic processing for submitted riders
 
-Check Celery logs:
+Check worker logs:
 ```bash
 docker logs yana_rider_celery -f
 ```
@@ -582,11 +630,3 @@ The dashboard includes: Service Health overview, Request Rate, Error Rate (5xx/4
 - [ ] Configure Prometheus metrics
 - [ ] Set up log aggregation (ELK/Loki)
 - [ ] Replace `gunicorn` with `uvicorn` for FastAPI services
-
----
-
-## Next Services (Phase 2)
-
-- `fleet-service` — Vehicle CRUD, allotment engine, GPS telemetry
-- `payments-service` — Double-entry ledger, Razorpay integration, rent schedule
-- `marketplace-service` — Demand slots, rider matching, attendance
