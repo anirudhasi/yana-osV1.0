@@ -11,3 +11,6 @@ services/*/celerybeat-schedule
 admin-dashboard/node_modules/
 admin-dashboard/dist/
 admin-dashboard/.npm-cache/
+.claude/
+.idea/
+*.zip
