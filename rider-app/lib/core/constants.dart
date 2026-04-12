@@ -11,8 +11,8 @@ class AppConstants {
   static String get apiBaseUrl {
     const override = String.fromEnvironment('API_BASE_URL', defaultValue: '');
     if (override.isNotEmpty) return override;
-    if (kIsWeb) return 'http://localhost:8000';
+    if (kIsWeb) return 'http://localhost:8081';
     // Android emulator routes to host via 10.0.2.2
-    return 'http://10.0.2.2:8000';
+    return 'http://10.0.2.2:8081';
   }
 }
