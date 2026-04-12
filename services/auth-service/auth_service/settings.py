@@ -14,20 +14,27 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*").split(",")
 SERVICE_NAME = "auth-service"
 
 INSTALLED_APPS = [
-    "django.contrib.contenttypes",
+    "django.contrib.admin",
     "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "drf_spectacular",
+    "import_export",
     "auth_service.core",
 ]
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
 ROOT_URLCONF = "auth_service.urls"
@@ -124,4 +131,18 @@ TIME_ZONE     = "Asia/Kolkata"
 USE_I18N      = True
 USE_TZ        = True
 
-TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [], "APP_DIRS": True, "OPTIONS": {"context_processors": []}}]
+# Shared DB: skip admin/sessions migrations — tables created by rider-service
+MIGRATION_MODULES = {"admin": None, "sessions": None}
+
+TEMPLATES = [{
+    "BACKEND": "django.template.backends.django.DjangoTemplates",
+    "DIRS": [],
+    "APP_DIRS": True,
+    "OPTIONS": {
+        "context_processors": [
+            "django.template.context_processors.request",
+            "django.contrib.auth.context_processors.auth",
+            "django.contrib.messages.context_processors.messages",
+        ]
+    },
+}]

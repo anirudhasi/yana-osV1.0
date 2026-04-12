@@ -14,3 +14,4 @@ gunicorn==21.2.0
 razorpay==1.4.1
 httpx==0.26.0
 cryptography==42.0.2
+django-import-export==3.3.8

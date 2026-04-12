@@ -10,12 +10,19 @@ SERVICE_NAME  = "support-service"
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes", "django.contrib.auth",
+    "django.contrib.admin", "django.contrib.sessions",
+    "django.contrib.messages",
     "rest_framework", "corsheaders", "drf_spectacular",
-    "django_celery_beat", "support_service.core",
+    "django_celery_beat", "import_export", "support_service.core",
 ]
-MIDDLEWARE = ["corsheaders.middleware.CorsMiddleware",
-              "django.middleware.security.SecurityMiddleware",
-              "django.middleware.common.CommonMiddleware"]
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+]
 ROOT_URLCONF     = "support_service.urls"
 WSGI_APPLICATION = "support_service.wsgi.application"
 
@@ -63,6 +70,12 @@ SLA_BY_PRIORITY    = {"LOW": 72, "MEDIUM": 24, "HIGH": 8, "CRITICAL": 2}
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
 LANGUAGE_CODE = "en-us"; TIME_ZONE = "Asia/Kolkata"; USE_I18N = True; USE_TZ = True
+# Shared DB: skip admin/sessions migrations — tables created by rider-service
+MIGRATION_MODULES = {"admin": None, "sessions": None}
 TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [],
-              "APP_DIRS": True, "OPTIONS": {"context_processors": []}}]
+              "APP_DIRS": True, "OPTIONS": {"context_processors": [
+                  "django.template.context_processors.request",
+                  "django.contrib.auth.context_processors.auth",
+                  "django.contrib.messages.context_processors.messages",
+              ]}}]
 SPECTACULAR_SETTINGS = {"TITLE": "Yana OS — Support Service", "VERSION": "1.0.0"}
